@@ -12,9 +12,8 @@ MultiBot.data.classes.input = {
 [10] = "Warrior"
 }
 
-<<<<<<< Updated upstream
 -- INFO --
-=======
+
 -- GLYPHS
 MultiBot.info.glyphssocketnotunlocked =
 "This socket is not yet unlocked.";
@@ -64,7 +63,6 @@ MultiBot.info.hunterpetrandomfamily =
 "Random by Family";
 
 -- end Hunter
->>>>>>> Stashed changes
 
 MultiBot.info.command =
 "Command not found.";
@@ -598,75 +596,6 @@ MultiBot.tips.beast.call =
 
 MultiBot.tips.creator.master =
 "Creator-Control\n|cffffffff"..
-<<<<<<< Updated upstream
-"With this Button you can create Random-Bots by Class.\n"..
-"The default Limit is 40 Random-Bots per Account.\n"..
-"There is no command to delete them after use.\n"..
-"So invite them to your Friendlist for reuse.\n"..
-"The Execution-Order shows the Receiver for Commands.|r\n\n"..
-"|cffff0000Left-Click to show or hide the Options|r\n"..
-"|cff999999(Execution-Order: System)|r";
-
-MultiBot.tips.creator.warrior =
-"Create-Warrior\n|cffffffff"..
-"This Button will create a Random-Bot as a Warrior.|r\n\n"..
-"|cffff0000Left-Click to create a Warrior|r\n"..
-"|cff999999(Execution-Order: System)|r";
-
-MultiBot.tips.creator.warlock =
-"Create-Warlock\n|cffffffff"..
-"This Button will create a Random-Bot as a Warlock.|r\n\n"..
-"|cffff0000Left-Click to create a Warlock|r\n"..
-"|cff999999(Execution-Order: System)|r";
-
-MultiBot.tips.creator.shaman =
-"Create-Shaman\n|cffffffff"..
-"This Button will create a Random-Bot as a Shaman.|r\n\n"..
-"|cffff0000Left-Click to create a Shaman|r\n"..
-"|cff999999(Execution-Order: System)|r";
-
-MultiBot.tips.creator.rogue =
-"Create-Rogue\n|cffffffff"..
-"This Button will create a Random-Bot as a Rogue.|r\n\n"..
-"|cffff0000Left-Click to create a Rogue|r\n"..
-"|cff999999(Execution-Order: System)|r";
-
-MultiBot.tips.creator.priest =
-"Create-Priest\n|cffffffff"..
-"This Button will create a Random-Bot as a Priest.|r\n\n"..
-"|cffff0000Left-Click to create a Priest|r\n"..
-"|cff999999(Execution-Order: System)|r";
-
-MultiBot.tips.creator.paladin =
-"Create-Paladin\n|cffffffff"..
-"This Button will create a Random-Bot as a Paladin.|r\n\n"..
-"|cffff0000Left-Click to create a Paladin|r\n"..
-"|cff999999(Execution-Order: System)|r";
-
-MultiBot.tips.creator.mage =
-"Create-Mage\n|cffffffff"..
-"This Button will create a Random-Bot as a Mage.|r\n\n"..
-"|cffff0000Left-Click to create a Mage|r\n"..
-"|cff999999(Execution-Order: System)|r";
-
-MultiBot.tips.creator.hunter =
-"Create-Hunter\n|cffffffff"..
-"This Button will create a Random-Bot as a Hunter.|r\n\n"..
-"|cffff0000Left-Click to create a Hunter|r\n"..
-"|cff999999(Execution-Order: System)|r";
-
-MultiBot.tips.creator.druid =
-"Create-Druid\n|cffffffff"..
-"This Button will create a Random-Bot as a Druid.|r\n\n"..
-"|cffff0000Left-Click to create a Druid|r\n"..
-"|cff999999(Execution-Order: System)|r";
-
-MultiBot.tips.creator.deathknight =
-"Create-DeathKnight\n|cffffffff"..
-"This Button will create a Random-Bot as a DeathKnight.|r\n\n"..
-"|cffff0000Left-Click to create a DeathKnight|r\n"..
-"|cff999999(Execution-Order: System)|r";
-=======
 "Create RandomBots by Class. Default Limit is 40 Bots per account.\n"..
 "There is no command to delete them after use,\n"..
 "so invite them to your Friend List to use them again.\n"..
@@ -743,12 +672,11 @@ MultiBot.tips.creator.genderrandom =
 "The winds of fate shall decide!|r\n\n"..
 "|cffff0000Left-click to Create|r\n"..
 "|cff999999(Executed by: System)|r";
->>>>>>> Stashed changes
 
 MultiBot.tips.creator.inspect =
-"Inspect-Target\n|cffffffff"..
-"This Button will open the selected Bot Inspect-Window of your Target.|r\n\n"..
-"|cffff0000Left-click to open Inspect-Window|r\n"..
+"Inspect Target\n|cffffffff"..
+"Opens the Inspect window of your Target.|r\n\n"..
+"|cffff0000Left-click to open Inspect window|r\n"..
 "|cff999999(Executed by: Target)|r";
 
 MultiBot.tips.creator.init =
@@ -1153,8 +1081,6 @@ Requires GameMaster rights.|r\n\n"..
 "|cffff0000Left-click to activate|r\n"..
 "|cff999999(Executed by: Target)|r";
 
-<<<<<<< Updated upstream
-=======
 MultiBot.tips.game.delsvwarning =
 "|cffff4444WARNING|r : you are about to delete ALL MultiBot saved data.\nThis action cannot be undone.\n\nAre you sure?";
 
@@ -1165,21 +1091,10 @@ MultiBot.tips.game.delsv =
 "|cffff0000Left-click to confirm|r\n"..
 "|cff999999(Executed at System Level)|r";
 
->>>>>>> Stashed changes
 -- QUESTS --
 
 MultiBot.tips.quests.master =
 "Quest-Control\n|cffffffff"..
-<<<<<<< Updated upstream
-"This Control shows the current List of Quests.\n"..
-"Left-Click the Pages to share the Quest with your bots.\n"..
-"Right-Click the Pages to abandon your and your Bots Quest.\n"..
-"The Execution-Order shows the Receiver for Commandos.|r\n\n"..
-"|cffff0000Left-Click to show or hide the Options|r\n"..
-"|cff999999(Execution-Order: System)|r\n\n"..
-"|cffff0000Right-Click to refresh the Options|r\n"..
-"|cff999999(Execution-Order: System)|r";
-=======
 "Shows the current Quest Log.\n"..
 "Left-click the Pages to share the Quest with your bots.\n"..
 "Right-click the Pages to abandon your and your Bots' Quest.\n"..
@@ -1187,7 +1102,6 @@ MultiBot.tips.quests.master =
 "|cff999999(Executed by: System)|r\n\n"..
 "|cffff0000Right-click to refresh the Options|r\n"..
 "|cff999999(Executed by: System)|r";
->>>>>>> Stashed changes
 
 MultiBot.tips.quests.accept =
 "Quest-Accpet\n|cffffffff"..
@@ -1195,8 +1109,6 @@ MultiBot.tips.quests.accept =
 "|cffff0000Left-click to activate|r\n"..
 "|cff999999(Executed by: Raid, Party)|r";
 
-<<<<<<< Updated upstream
-=======
 MultiBot.tips.quests.main =
 "Open Quests Menu\n|cffffffff"..
 "|cffff0000Left-click to open|r\n"..
@@ -1296,7 +1208,6 @@ MultiBot.tips.quests.gobsfound =
 MultiBot.tips.quests.gobpromptname =
 "Game Object Name";
 
->>>>>>> Stashed changes
 -- DRINK --
 
 MultiBot.tips.drink.group =
@@ -1853,15 +1764,6 @@ MultiBot.tips.druid.dps.dps =
 "|cffff0000Left-click to enable or disable|r\n"..
 "|cf9999999(Executed by: Bot)|r";
 
-<<<<<<< Updated upstream
-MultiBot.tips.druid.tankAssist = 
-"Tank-Assist|cffffffff\n"..
-"It enables the Tank-Assist-Strategies.\n"..
-"DPS-AOE, DPS-Assist and Tank-Assist are mutually exclusive.\n"..
-"Only one of these Strategies can be activated.|r\n\n"..
-"|cffff0000Left-Click to enable or disable Tank-Assist|r\n"..
-"|cf9999999(Execution-Order: Bot)|r";
-=======
 MultiBot.tips.druid.dps.offheal =
 "OffHeal|cffffffff\n"..
 "Switches from DPS to Off-heal.\n"..
@@ -1876,7 +1778,6 @@ MultiBot.tips.druid.tankAssist =
 "Only one of these Strategies may be activated at a time.|r\n\n"..
 "|cffff0000Left-click to enable or disable|r\n"..
 "|cf9999999(Executed by: Bot)|r";
->>>>>>> Stashed changes
 
 MultiBot.tips.druid.tank =
 "Tank|cffffffff\n"..
@@ -1888,8 +1789,6 @@ MultiBot.tips.druid.tank =
 
 -- HUNTER --
 
-<<<<<<< Updated upstream
-=======
 MultiBot.tips.hunter.pet.master =
 "Pet Commands|cffffffff\n"..
 "Opens a bar with multiple pet summoning options.|r\n\n"..
@@ -1920,7 +1819,6 @@ MultiBot.tips.hunter.pet.rename =
 "|cffff0000Left-click to rename|r\n"..
 "|cff999999(Execution Order: Bot)|r";
 
->>>>>>> Stashed changes
 MultiBot.tips.hunter.naspect.master =
 "Non-Combat Buff|cffffffff\n"..
 "Allows selecting, enabling or disabling the default Non-Combat Buff.|r\n\n"..
@@ -2299,9 +2197,6 @@ MultiBot.tips.paladin.dps.dps =
 "|cffff0000Left-click to enable or disable DPS|r\n"..
 "|cf9999999(Executed by: Bot)|r";
 
-<<<<<<< Updated upstream
-MultiBot.tips.paladin.tankAssist = 
-=======
 MultiBot.tips.paladin.dps.offheal =
 "OffHeal|cffffffff\n"..
 "This disable dps mode and enable offheal, \n"..
@@ -2311,7 +2206,6 @@ MultiBot.tips.paladin.dps.offheal =
 "|cf9999999(Executed by: Bot)|r";
 
 MultiBot.tips.paladin.tankAssist =
->>>>>>> Stashed changes
 "Tank-Assist|cffffffff\n"..
 "It enables the Tank-Assist-Strategies.\n"..
 "DPS-AOE, DPS-Assist and Tank-Assist are mutually exclusive.\n"..
@@ -2571,8 +2465,6 @@ MultiBot.tips.shaman.tankAssist =
 
 -- WARLOCK --
 
-<<<<<<< Updated upstream
-=======
 -- NEW
 MultiBot.tips.warlock.curses = {}
 MultiBot.tips.warlock.stones = {}
@@ -2706,7 +2598,6 @@ MultiBot.tips.warlock.curses.tongues =
 "|cffff0000Left-click to apply this curse.|r\n"..
 "|cff999999(Executed by: Bot)|r";
 
->>>>>>> Stashed changes
 MultiBot.tips.warlock.buff.master =
 "Buff|cffffffff\n"..
 "This Control allows you to select, enable or disable the default Buff.|r\n\n"..
@@ -2882,8 +2773,6 @@ MultiBot.tips.every.talent =
 "|cffff0000Left-click to open or close the Talents|r\n"..
 "|cff999999(Executed by: Bot)|r";
 
-<<<<<<< Updated upstream
-=======
 -- WIPE COMMAND --
 
 MultiBot.tips.every.wipe =
@@ -3425,7 +3314,6 @@ MultiBot.tips.spec.warriorprotecpvp =
   .."|cffff0000Right-click to set as secondary spec|r\n"
   .."|cff999999(Execution order: Bot)|r";
 
->>>>>>> Stashed changes
 -- RTSC --
 
 MultiBot.tips.rtsc.master =
