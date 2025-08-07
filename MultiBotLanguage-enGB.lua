@@ -1077,7 +1077,7 @@ MultiBot.tips.game.summon =
 MultiBot.tips.game.appear =
 "Teleport to Player \n|cffffffff"..
 "Teleports you the position of the targeted Player or Bot.\n"..
-Requires GameMaster rights.|r\n\n"..
+"Requires GameMaster rights.|r\n\n"..
 "|cffff0000Left-click to activate|r\n"..
 "|cff999999(Executed by: Target)|r";
 
@@ -1595,7 +1595,7 @@ MultiBot.tips.itemus.slot.S28 =
 
 MultiBot.tips.itemus.type =
 "Type Filter|cffffffff\n"..
-"Switches between Player and NPC items."
+"Switches between Player and NPC items."..
 "Combines with iLevel, Rarity, and Slot filters.|r\n\n"..
 "|cffff0000Left-click to enable or disable NPC item filtering|r\n"..
 "|cff999999(Executed by: System)|r";
@@ -1612,19 +1612,19 @@ MultiBot.tips.deathknight.presence.master =
 
 MultiBot.tips.deathknight.presence.unholy =
 "Unholy|cffffffff\n"..
-Activates Unholy Specialization.|r\n\n"..
+"Activates Unholy Specialization.|r\n\n"..
 "|cffff0000Left-click to activate|r\n"..
 "|cff999999(Executed by: Bot)|r";
 
 MultiBot.tips.deathknight.presence.frost =
 "Frost|cffffffff\n"..
-Activates Frost Specialization.|r\n\n"..
+"Activates Frost Specialization.|r\n\n"..
 "|cffff0000Left-click to activate|r\n"..
 "|cff999999(Executed by: Bot)|r";
 
 MultiBot.tips.deathknight.presence.blood =
 "BLood|cffffffff\n"..
-Activates Blood Specialization.|r\n\n"..
+"Activates Blood Specialization.|r\n\n"..
 "|cffff0000Left-click to activate|r\n"..
 "|cff999999(Executed by: Bot)|r";
 
