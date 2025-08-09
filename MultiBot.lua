@@ -11,6 +11,13 @@ MultiBot:RegisterEvent("CHAT_MSG_LOOT")
 MultiBot:RegisterEvent("QUEST_COMPLETE")
 MultiBot:RegisterEvent("QUEST_LOG_UPDATE")
 MultiBot:RegisterEvent("TRADE_CLOSED")
+-- GLYPHES --
+MultiBot:RegisterEvent("INSPECT_READY")
+
+-- QUESTS --
+MultiBot:RegisterEvent("CHAT_MSG_PARTY")
+MultiBot:RegisterEvent("CHAT_MSG_RAID")
+
 MultiBot:SetPoint("BOTTOMRIGHT", 0, 0)
 MultiBot:SetSize(1, 1)
 MultiBot:Show()
@@ -33,6 +40,7 @@ MultiBot.spells = {}
 MultiBot.frames = {}
 MultiBot.units = {}
 MultiBot.tips = {}
+MultiBot.tips.spec = MultiBot.tips.spec or {}
 
 MultiBot.auto = {}
 MultiBot.auto.sort = false
@@ -85,10 +93,108 @@ MultiBot.data.classes.output = {
 [10] = "Warrior"
 }
 
+--  Compatibility API for refactored
+if not IsInRaid then
+  -- Client 3.3.5 compatibility
+  function IsInRaid()
+    return GetNumRaidMembers() > 0
+  end
+end
+
+if not IsInGroup then
+  function IsInGroup()              -- Define if it's a raid or party
+    return IsInRaid() or GetNumPartyMembers() > 0
+  end
+end
+
+if not GetNumGroupMembers then
+  -- Wrath : "raid" only
+  function GetNumGroupMembers()
+    return GetNumRaidMembers()
+  end
+end
+
+if not GetNumSubgroupMembers then
+  -- Number of members in party (without player) in Wrath
+  function GetNumSubgroupMembers()
+    return GetNumPartyMembers()
+  end
+end
+
+--  AddClassToTarget Wrapper
+-- Usage : MultiBot.AddClassToTarget("warlock"        ) -- Random
+--         MultiBot.AddClassToTarget("warlock","male" ) -- Male
+--         MultiBot.AddClassToTarget("warlock","female") -- Female
+MultiBot.AddClassToTarget = function(classCmd, gender)
+  if not classCmd then return end             -- secure that
+  local msg = ".playerbot bot addclass " .. classCmd
+  if gender then                                 -- male / female / 0 / 1
+	msg = msg .. " " .. gender
+	print("[DBG] Message de sortie :" ,msg)
+  end
+  SendChatMessage(msg, "SAY")
+end
+
+-- Init Wrapper
+function MultiBot.InitAuto(name)
+  SendChatMessage(".playerbot bot init=auto " .. name, "SAY")
+end
+
 -- INFO --
 
 MultiBot.info = {}
 MultiBot.info.shorts = {}
+
+-- GLYPHS
+MultiBot.info.glyphssocketnotunlocked =
+"This socket is not yet unlocked.";
+
+MultiBot.info.glyphswrongclass =
+"This glyph is not for the bot's class.";
+
+MultiBot.info.glyphsunknowglyph =
+"Unable to identify this glyph.";
+
+MultiBot.info.glyphsglyphtype =
+"Glyphe type ";
+
+MultiBot.info.glyphsglyphsocket =
+"wrong socket.";
+
+MultiBot.info.glyphsleveltoolow =
+"Level too low for this glyph.";
+
+MultiBot.info.glyphscustomglyphsfor =
+"Custom Glyphs for";
+
+MultiBot.info.glyphsglyphsfor =
+"Glyphs for";
+
+MultiBot.info.talentscustomtalentsfor =
+"Custom Talents for";
+
+-- Hunter
+
+MultiBot.info.hunterpeteditentervalue =
+"Enter value";
+
+MultiBot.info.hunterpetcreaturelist =
+"Pets List by Name";
+
+MultiBot.info.hunterpetnewname =
+"New pet name";
+
+MultiBot.info.hunterpetid =
+"Pet ID";
+
+MultiBot.info.hunterpetentersomething =
+"Enter Something here...";
+
+MultiBot.info.hunterpetrandomfamily =
+"Random by Family";
+
+-- end Hunter
+
 MultiBot.info.command =
 "Command not found.";
 
@@ -164,7 +270,7 @@ MultiBot.info.saving =
 MultiBot.info.action =
 "I need to select a Action.";
 
-MultiBot.info.combination = 
+MultiBot.info.combination =
 "There are no Items for this Combination.";
 
 --MultiBot.info.language =
@@ -201,10 +307,10 @@ MultiBot.info.talent.Level =
 MultiBot.info.talent.OutOfRange =
 "The Bot is out of Range.";
 
-MultiBot.info.talent.Apply = 
+MultiBot.info.talent.Apply =
 "Apply";
 
-MultiBot.info.talent.Copy = 
+MultiBot.info.talent.Copy =
 "Copy";
 
 MultiBot.info.talent.Title =
@@ -315,10 +421,10 @@ MultiBot.tips.move.stats =
 MultiBot.tips.move.itemus =
 "Right-Click to drag and move Itemus";
 
-MultiBot.tips.move.iconos = 
+MultiBot.tips.move.iconos =
 "Right-Click to drag and move Iconos";
 
-MultiBot.tips.move.spellbook = 
+MultiBot.tips.move.spellbook =
 "Right-Click to drag and move the Spellbook";
 
 MultiBot.tips.move.reward =
@@ -333,7 +439,7 @@ MultiBot.tips.move.raidus =
 -- TANKER --
 
 MultiBot.tips.tanker = {}
-MultiBot.tips.tanker.master = 
+MultiBot.tips.tanker.master =
 "Tank-Attack\n|cffffffff"..
 "With this Button the Tanks starting to attack your target.\n"..
 "The Execution-Order shows the Receiver for Commandos.|r\n\n"..
@@ -343,7 +449,7 @@ MultiBot.tips.tanker.master =
 -- ATTACK --
 
 MultiBot.tips.attack = {}
-MultiBot.tips.attack.master = 
+MultiBot.tips.attack.master =
 "Attack-Control\n|cffffffff"..
 "With this Control you can give the Command to attack.\n"..
 "Right-Click the Options to define a new default Action.\n"..
@@ -353,7 +459,7 @@ MultiBot.tips.attack.master =
 "|cffff0000Right-Click to show or hide the Options|r\n"..
 "|cff999999(Execution-Order: System)|r";
 
-MultiBot.tips.attack.attack = 
+MultiBot.tips.attack.attack =
 "Attack\n|cffffffff"..
 "With this Command the hole Raid or Party starting to attack your target.|r\n\n"..
 "|cffff0000Left-Click to execute Attack|r\n"..
@@ -361,7 +467,7 @@ MultiBot.tips.attack.attack =
 "|cffff0000Right-Click to define as default Action|r\n"..
 "|cff999999(Execution-Order: System)|r";
 
-MultiBot.tips.attack.ranged = 
+MultiBot.tips.attack.ranged =
 "Ranged-Attack\n|cffffffff"..
 "With this Command the Ranged-Fighters starting to attack your target.|r\n\n"..
 "|cffff0000Left-Click to execute Ranged-Attack|r\n"..
@@ -369,7 +475,7 @@ MultiBot.tips.attack.ranged =
 "|cffff0000Right-Click to define as default Action|r\n"..
 "|cff999999(Execution-Order: System)|r";
 
-MultiBot.tips.attack.melee = 
+MultiBot.tips.attack.melee =
 "Melee-Attack\n|cffffffff"..
 "With this Command the Melee-Fighters starting to attack your target.|r\n\n"..
 "|cffff0000Left-Click to execute Melee-Attack|r\n"..
@@ -377,7 +483,7 @@ MultiBot.tips.attack.melee =
 "|cffff0000Right-Click to define as default Action|r\n"..
 "|cff999999(Execution-Order: System)|r";
 
-MultiBot.tips.attack.healer = 
+MultiBot.tips.attack.healer =
 "Healer-Attack\n|cffffffff"..
 "With this Command the Healers starting to attack your target.|r\n\n"..
 "|cffff0000Left-Click to execute Healer-Attack|r\n"..
@@ -385,7 +491,7 @@ MultiBot.tips.attack.healer =
 "|cffff0000Right-Click to define as default Action|r\n"..
 "|cff999999(Execution-Order: System)|r";
 
-MultiBot.tips.attack.dps = 
+MultiBot.tips.attack.dps =
 "DPS-Attack\n|cffffffff"..
 "With this Command the DPS starting to attack your target.|r\n\n"..
 "|cffff0000Left-Click to execute DPS-Attack|r\n"..
@@ -393,7 +499,7 @@ MultiBot.tips.attack.dps =
 "|cffff0000Right-Click to define as default Action|r\n"..
 "|cff999999(Execution-Order: System)|r";
 
-MultiBot.tips.attack.tank = 
+MultiBot.tips.attack.tank =
 "Tank-Attack\n|cffffffff"..
 "With this Command the Tanks starting to attack your target.|r\n\n"..
 "|cffff0000Left-Click to execute Tank-Attack|r\n"..
@@ -404,7 +510,7 @@ MultiBot.tips.attack.tank =
 -- MODE --
 
 MultiBot.tips.mode = {}
-MultiBot.tips.mode.master = 
+MultiBot.tips.mode.master =
 "Mode-Control\n|cffffffff"..
 "This Control allows you to switch a Combat-Mode on and off.\n"..
 "Left-Click the Options to select another Combat-Mode.\n"..
@@ -414,7 +520,7 @@ MultiBot.tips.mode.master =
 "|cffff0000Right-Click to show or hide Options|r\n"..
 "|cff999999(Execution-Order: System)|r";
 
-MultiBot.tips.mode.passive = 
+MultiBot.tips.mode.passive =
 "Passive-Mode\n|cffffffff"..
 "In the Passive-Mode, your Bots wont attack any Opponent.\n"..
 "This Mode is useful to keep the Tank from running into the Opponents during a pull.\n"..
@@ -423,7 +529,7 @@ MultiBot.tips.mode.passive =
 "|cffff0000Left-Click to select and activate Passive-Mode|r\n"..
 "|cff999999(Execution-Order: Raid, Party)|r";
 
-MultiBot.tips.mode.grind = 
+MultiBot.tips.mode.grind =
 "Grind-Mode\n|cffffffff"..
 "In the Grind-Mode, your Bots attack Opponent independently.\n"..
 "This Mode is usefull to level up your Bots.|r\n\n"..
@@ -433,7 +539,7 @@ MultiBot.tips.mode.grind =
 -- STAY|FOLLOW --
 
 MultiBot.tips.stallow = {}
-MultiBot.tips.stallow.stay = 
+MultiBot.tips.stallow.stay =
 "Stay|Follow\n|cffffffff"..
 "With this Button you can give right now the Command to Stay.\n"..
 "This Command cancels the Passive-Mode, in combination Stay should be commanded first.\n"..
@@ -441,7 +547,7 @@ MultiBot.tips.stallow.stay =
 "|cffff0000Left-Click to execute Stay|r\n"..
 "|cff999999(Execution-Order: Raid, Party)|r";
 
-MultiBot.tips.stallow.follow = 
+MultiBot.tips.stallow.follow =
 "Stay|Follow\n|cffffffff"..
 "With this Button you can give right now the Command to Follow.\n"..
 "This Command cancels the Passive-Mode, in combination Follow should be commanded first.\n"..
@@ -450,7 +556,7 @@ MultiBot.tips.stallow.follow =
 "|cff999999(Execution-Order: Raid, Party)|r";
 
 MultiBot.tips.expand = {}
-MultiBot.tips.expand.stay = 
+MultiBot.tips.expand.stay =
 "Stay\n|cffffffff"..
 "With this Button you can give right now the Command to Stay.\n"..
 "This Command cancels the Passive-Mode, in combination Stay should be commanded first.\n"..
@@ -458,7 +564,7 @@ MultiBot.tips.expand.stay =
 "|cffff0000Left-Click to execute Stay|r\n"..
 "|cff999999(Execution-Order: Raid, Party)|r";
 
-MultiBot.tips.expand.follow = 
+MultiBot.tips.expand.follow =
 "Follow\n|cffffffff"..
 "With this Button you can give right now the Command to Follow.\n"..
 "This Command cancels the Passive-Mode, in combination Follow should be commanded first.\n"..
@@ -469,7 +575,7 @@ MultiBot.tips.expand.follow =
 -- FLEE --
 
 MultiBot.tips.flee = {}
-MultiBot.tips.flee.master = 
+MultiBot.tips.flee.master =
 "Flee-Control\n|cffffffff"..
 "With this Control you can give the Command to flee.\n"..
 "Right-Click the Options to define a new default Action.\n"..
@@ -479,7 +585,7 @@ MultiBot.tips.flee.master =
 "|cffff0000Right-Click to show or hide the Options|r\n"..
 "|cff999999(Execution-Order: System)|r";
 
-MultiBot.tips.flee.flee = 
+MultiBot.tips.flee.flee =
 "Flee\n|cffffffff"..
 "With this Command the hole Raid or Party starting to flee.|r\n\n"..
 "|cffff0000Left-Click to execute Flee|r\n"..
@@ -487,7 +593,7 @@ MultiBot.tips.flee.flee =
 "|cffff0000Right-Click to define as default Action|r\n"..
 "|cff999999(Execution-Order: System)|r";
 
-MultiBot.tips.flee.ranged = 
+MultiBot.tips.flee.ranged =
 "Ranged-Flee\n|cffffffff"..
 "With this Command the Ranged-Fighters starting to flee.|r\n\n"..
 "|cffff0000Left-Click to execute Ranged-Flee|r\n"..
@@ -495,7 +601,7 @@ MultiBot.tips.flee.ranged =
 "|cffff0000Right-Click to define as default Action|r\n"..
 "|cff999999(Execution-Order: System)|r";
 
-MultiBot.tips.flee.melee = 
+MultiBot.tips.flee.melee =
 "Melee-Flee\n|cffffffff"..
 "With this Command the Melee-Fighters starting to flee.|r\n\n"..
 "|cffff0000Left-Click to execute Melee-Flee|r\n"..
@@ -503,7 +609,7 @@ MultiBot.tips.flee.melee =
 "|cffff0000Right-Click to define as default Action|r\n"..
 "|cff999999(Execution-Order: System)|r";
 
-MultiBot.tips.flee.healer = 
+MultiBot.tips.flee.healer =
 "Healer-Flee\n|cffffffff"..
 "With this Command the Healers starting to flee.|r\n\n"..
 "|cffff0000Left-Click to execute Healer-Flee|r\n"..
@@ -511,7 +617,7 @@ MultiBot.tips.flee.healer =
 "|cffff0000Right-Click to define as default Action|r\n"..
 "|cff999999(Execution-Order: System)|r";
 
-MultiBot.tips.flee.dps = 
+MultiBot.tips.flee.dps =
 "DPS-Flee\n|cffffffff"..
 "With this Command the DPS starting to flee.|r\n\n"..
 "|cffff0000Left-Click to execute DPS-Flee|r\n"..
@@ -519,7 +625,7 @@ MultiBot.tips.flee.dps =
 "|cffff0000Right-Click to define as default Action|r\n"..
 "|cff999999(Execution-Order: System)|r";
 
-MultiBot.tips.flee.tank = 
+MultiBot.tips.flee.tank =
 "Tank-Flee\n|cffffffff"..
 "With this Command the Tanks starting to flee.|r\n\n"..
 "|cffff0000Left-Click to execute Tank-Flee|r\n"..
@@ -527,7 +633,7 @@ MultiBot.tips.flee.tank =
 "|cffff0000Right-Click to define as default Action|r\n"..
 "|cff999999(Execution-Order: System)|r";
 
-MultiBot.tips.flee.target = 
+MultiBot.tips.flee.target =
 "Target-Flee\n|cffffffff"..
 "With this Command the Target starting to flee.|r\n\n"..
 "|cffff0000Left-Click to execute Target-Flee|r\n"..
@@ -538,7 +644,7 @@ MultiBot.tips.flee.target =
 -- FORMATION --
 
 MultiBot.tips.format = {}
-MultiBot.tips.format.master = 
+MultiBot.tips.format.master =
 "Formation-Control\n|cffffffff"..
 "This Control allows you to change the Formation of your Bots.\n"..
 "The Execution-Order shows the Receiver for Commandos.|r\n\n"..
@@ -547,7 +653,7 @@ MultiBot.tips.format.master =
 "|cffff0000Right-Click to ask for the current Formation|r\n"..
 "|cff999999(Execution-Order: Raid, Party)|r";
 
-MultiBot.tips.format.arrow = 
+MultiBot.tips.format.arrow =
 "Arrow-Formation\n|cffffffff"..
 "The Bots line up in an arrow formation.\n"..
 "The Bots line of sight is in your direction.\n\n"..
@@ -558,42 +664,42 @@ MultiBot.tips.format.arrow =
 "|cffff0000Left-Click to select the Arrow-Formation|r\n"..
 "|cff999999(Execution-Order: Raid, Party)|r";
 
-MultiBot.tips.format.queue = 
+MultiBot.tips.format.queue =
 "Queue-Formation\n|cffffffff"..
 "The Bots line up in an defensive formation.\n"..
 "The Bots line of sight is in your direction.|r\n\n"..
 "|cffff0000Left-Click to select the Queue-Formation|r\n"..
 "|cff999999(Execution-Order: Raid, Party)|r";
 
-MultiBot.tips.format.near = 
+MultiBot.tips.format.near =
 "Near-Formation\n|cffffffff"..
 "The Bots line up near by.\n"..
 "The Bots line of sight is in your direction.|r\n\n"..
 "|cffff0000Left-Click to select the Near-Formation|r\n"..
 "|cff999999(Execution-Order: Raid, Party)|r";
 
-MultiBot.tips.format.melee = 
+MultiBot.tips.format.melee =
 "Melee-Formation\n|cffffffff"..
 "The Bots line up for melee fights.\n"..
 "The Bots line of sight is in your direction.|r\n\n"..
 "|cffff0000Left-Click to select the Melee-Formation|r\n"..
 "|cff999999(Execution-Order: Raid, Party)|r";
 
-MultiBot.tips.format.line = 
+MultiBot.tips.format.line =
 "Line-Formation\n|cffffffff"..
 "The Bots line up on the left and right side in a parallel line.\n"..
 "The Bots line of sight is in your direction.|r\n\n"..
 "|cffff0000Left-Click to select the Line-Formation|r\n"..
 "|cff999999(Execution-Order: Raid, Party)|r";
 
-MultiBot.tips.format.circle = 
+MultiBot.tips.format.circle =
 "Circle-Formation\n|cffffffff"..
 "The Bots line up in a circle around you.\n"..
 "The Bots line of sight is directed outwards.|r\n\n"..
 "|cffff0000Left-Click to select the Circle-Formation|r\n"..
 "|cff999999(Execution-Order: Raid, Party)|r";
 
-MultiBot.tips.format.chaos = 
+MultiBot.tips.format.chaos =
 "Chaos-Formation\n|cffffffff"..
 "Each Bot follows you by its own.\n"..
 "They line up everywhere they wont.\n"..
@@ -601,7 +707,7 @@ MultiBot.tips.format.chaos =
 "|cffff0000Left-Click to select the Chaos-Formation|r\n"..
 "|cff999999(Execution-Order: Raid, Party)|r";
 
-MultiBot.tips.format.shield = 
+MultiBot.tips.format.shield =
 "Shield-Formation\n|cffffffff"..
 "The Bots line up in the front, on the left and right side.\n"..
 "The Bots line of sight is in your direction.|r\n\n"..
@@ -611,7 +717,7 @@ MultiBot.tips.format.shield =
 -- BEASTMASTER --
 
 MultiBot.tips.beast = {}
-MultiBot.tips.beast.master = 
+MultiBot.tips.beast.master =
 "Beastmaster-Control\n|cffffffff"..
 "This Control is for the Mod-NPC-Beastmaster of the Azerothcore.\n"..
 "Mod-NPC-Beastmaster allows every Character to have a Pet like Hunters.\n"..
@@ -654,74 +760,95 @@ MultiBot.tips.beast.call =
 -- CREATOR --
 
 MultiBot.tips.creator = {}
-MultiBot.tips.creator.master = 
+MultiBot.tips.creator.master =
 "Creator-Control\n|cffffffff"..
-"With this Control you can create Random-Bots by Class.\n"..
-"The default Limit is 40 Random-Bots per Account.\n"..
+"With this Control you can create Bots by Class.\n"..
+"The default Limit is 40 Bots per Account.\n"..
 "There is no command to delete them after use.\n"..
 "So invite them to your Friendlist for reuse.\n"..
-"The Execution-Order shows the Receiver for Commandos.|r\n\n"..
+"The Execution-Order shows the Receiver for Commands.|r\n\n"..
 "|cffff0000Left-Click to show or hide the Options|r\n"..
 "|cff999999(Execution-Order: System)|r";
 
 MultiBot.tips.creator.warrior =
 "Create-Warrior\n|cffffffff"..
-"This Button will create a Random-Bot as Warrior.|r\n\n"..
-"|cffff0000Left-Click to create Warrior|r\n"..
+"This Button will create a Bot as Warrior.|r\n\n"..
+"|cffff0000Left-Click to choose your Warrior gender.|r\n"..
 "|cff999999(Execution-Order: System)|r";
 
 MultiBot.tips.creator.warlock =
 "Create-Warlock\n|cffffffff"..
-"This Button will create a Random-Bot as Warlock.|r\n\n"..
-"|cffff0000Left-Click to create Warlock|r\n"..
+"This Button will create a Bot as Warlock.|r\n\n"..
+"|cffff0000Left-Click to choose your Warlock gender.|r\n"..
 "|cff999999(Execution-Order: System)|r";
 
 MultiBot.tips.creator.shaman =
 "Create-Shaman\n|cffffffff"..
-"This Button will create a Random-Bot as Shaman.|r\n\n"..
-"|cffff0000Left-Click to create Shaman|r\n"..
+"This Button will create a Bot as Shaman.|r\n\n"..
+"|cffff0000Left-Click to choose your Shaman gender.|r\n"..
 "|cff999999(Execution-Order: System)|r";
 
 MultiBot.tips.creator.rogue =
 "Create-Rogue\n|cffffffff"..
-"This Button will create a Random-Bot as Rogue.|r\n\n"..
-"|cffff0000Left-Click to create Rogue|r\n"..
+"This Button will create a Bot as Rogue.|r\n\n"..
+"|cffff0000Left-Click to choose your Rogue gender.|r\n"..
 "|cff999999(Execution-Order: System)|r";
 
 MultiBot.tips.creator.priest =
 "Create-Priest\n|cffffffff"..
-"This Button will create a Random-Bot as Priest.|r\n\n"..
-"|cffff0000Left-Click to create Priest|r\n"..
+"This Button will create a Bot as Priest.|r\n\n"..
+"|cffff0000Left-Click to choose your Priest gender.|r\n"..
 "|cff999999(Execution-Order: System)|r";
 
 MultiBot.tips.creator.paladin =
 "Create-Paladin\n|cffffffff"..
-"This Button will create a Random-Bot as Paladin.|r\n\n"..
-"|cffff0000Left-Click to create Paladin|r\n"..
+"This Button will create a Bot as Paladin.|r\n\n"..
+"|cffff0000Left-Click to choose your Paladin gender|r\n"..
 "|cff999999(Execution-Order: System)|r";
 
 MultiBot.tips.creator.mage =
 "Create-Mage\n|cffffffff"..
-"This Button will create a Random-Bot as Mage.|r\n\n"..
-"|cffff0000Left-Click to create Mage|r\n"..
+"This Button will create a Bot as Mage.|r\n\n"..
+"|cffff0000Left-Click to choose your Mage gender.|r\n"..
 "|cff999999(Execution-Order: System)|r";
 
 MultiBot.tips.creator.hunter =
 "Create-Hunter\n|cffffffff"..
-"This Button will create a Random-Bot as Hunter.|r\n\n"..
-"|cffff0000Left-Click to create Hunter|r\n"..
+"This Button will create a Bot as Hunter.|r\n\n"..
+"|cffff0000Left-Click to choose your Hunter gender.|r\n"..
 "|cff999999(Execution-Order: System)|r";
 
 MultiBot.tips.creator.druid =
 "Create-Druid\n|cffffffff"..
-"This Button will create a Random-Bot as Druid.|r\n\n"..
-"|cffff0000Left-Click to create Druid|r\n"..
+"This Button will create a Bot as Druid.|r\n\n"..
+"|cffff0000Left-Click to choose your Druid gender.|r\n"..
 "|cff999999(Execution-Order: System)|r";
 
 MultiBot.tips.creator.deathknight =
 "Create-DeathKnight\n|cffffffff"..
-"This Button will create a Random-Bot as DeathKnight.|r\n\n"..
-"|cffff0000Left-Click to create DeathKnight|r\n"..
+"This Button will create a Bot as DeathKnight.|r\n\n"..
+"|cffff0000Left-Click to choose your DeathKnight gender.|r\n"..
+"|cff999999(Execution-Order: System)|r";
+
+MultiBot.tips.creator.notarget =
+"I dont have a Target.";
+
+MultiBot.tips.creator.gendermale =
+"Creates a male companion.\n|cffffffff"..
+"Strong, bold, and always ready for battle... or ale.|r\n\n"..
+"|cffff0000Left-Click to Create|r\n"..
+"|cff999999(Execution-Order: System)|r";
+
+MultiBot.tips.creator.genderfemale =
+"Creates a female companion.\n|cffffffff"..
+"Graceful, fierce, and not to be underestimated.|r\n\n"..
+"|cffff0000Left-Click to Create|r\n"..
+"|cff999999(Execution-Order: System)|r";
+
+MultiBot.tips.creator.genderrandom =
+"Creates a bot with a random gender.\n|cffffffff"..
+"The winds of fate shall decide!|r\n\n"..
+"|cffff0000Left-Click to Create|r\n"..
 "|cff999999(Execution-Order: System)|r";
 
 MultiBot.tips.creator.inspect =
@@ -741,8 +868,7 @@ MultiBot.tips.creator.init =
 "|cffff0000Right-Click to Auto-Initialize your Group|r\n"..
 "|cff999999(Execution-Order: Raid, Party)|r";
 
--- UNIT --
-
+-- INIT --
 MultiBot.tips.unit = {}
 MultiBot.tips.unit.selfbot =
 "Selfbot\n"..
@@ -901,7 +1027,7 @@ MultiBot.tips.units.invite =
 "With this Control you can automaticaly fill up your Group.\n"..
 "The left Button is for 'Party-Invite', the right Buttons are for 'Raid-Invite'.\n"..
 "Additionally a Right-Click on this Button will add or remove all Bots at once.\n"..
-"Means, if you are not in a Group all Bots will be added else they are removed.|r\n\n".. 
+"Means, if you are not in a Group all Bots will be added else they are removed.|r\n\n"..
 "|cffff0000Left-Click to show or hide the Control|r\n"..
 "|cff999999(Execution-Order: System)|r\n\n"..
 "|cffff0000Right-Click to add or remove all Bots|r\n"..
@@ -941,7 +1067,7 @@ MultiBot.tips.units.inviteRaid40 =
 
 -- UNITS:ALL --
 
-MultiBot.tips.units.alliance = 
+MultiBot.tips.units.alliance =
 "Alliance\n|cffffffff"..
 "With this Button you can bring all you Group-Members online or offline.\n"..
 "Maybe MultiBot wont be able to react fast enough and will not show all Botbars.\n\n"..
@@ -1123,7 +1249,7 @@ MultiBot.tips.game.memory =
 "|cffff0000Right-Click to forget the Location|r\n"..
 "|cff999999(Execution-Order: Yourself)|r";
 
-MultiBot.tips.game.itemus = 
+MultiBot.tips.game.itemus =
 "Itemus\n|cffffffff"..
 "You will find every Item in the Box of the GamerMaster.\n"..
 "Just target the Player or Bot, left click the Item and the wish come true.\n"..
@@ -1132,7 +1258,7 @@ MultiBot.tips.game.itemus =
 "|cffff0000Left-Click to open or close the Itemus|r\n"..
 "|cff999999(Execution-Order: System)|r";
 
-MultiBot.tips.game.iconos = 
+MultiBot.tips.game.iconos =
 "Iconos\n|cffffffff"..
 "You will find every Icon and his Path in this Tool.\n"..
 "The Execution-Order shows the Receiver for Commandos.|r\n\n"..
@@ -1153,6 +1279,16 @@ MultiBot.tips.game.appear =
 "|cffff0000Left-Click to appear at your Target|r\n"..
 "|cff999999(Execution-Order: Target)|r";
 
+MultiBot.tips.game.delsvwarning =
+"|cffff4444WARNING|r : you are about to delete ALL MultiBot saved variables.\nThis action is irreversible.\n\nDo you want to continue?";
+
+MultiBot.tips.game.delsv =
+"Delete Saved Variables\n|cffffffff"..
+"This button will permanently erase all data from the MultiBot SavedVariables file (MultiBot.lua).\n"..
+"This action cannot be undone. Use with caution!|r\n\n"..
+"|cffff0000Left-Click to Delete|r\n"..
+"|cff999999(Executed at System Level)|r";
+
 -- QUESTS --
 
 MultiBot.tips.quests = {}
@@ -1161,7 +1297,7 @@ MultiBot.tips.quests.master =
 "This Control shows the current List of Quests.\n"..
 "Left-Click the Pages to share the Quest with your bots.\n"..
 "Right-Click the Pages to abandon your and your Bots Quest.\n"..
-"The Execution-Order shows the Receiver for Commandos.|r\n\n"..
+"The Execution-Order shows the Receiver for Commands.|r\n\n"..
 "|cffff0000Left-Click to show or hide the Options|r\n"..
 "|cff999999(Execution-Order: System)|r\n\n"..
 "|cffff0000Right-Click to refresh the Options|r\n"..
@@ -1173,20 +1309,120 @@ MultiBot.tips.quests.accept =
 "|cffff0000Left-Click to take every Quest|r\n"..
 "|cff999999(Execution-Order: Raid, Party)|r";
 
+MultiBot.tips.quests.main =
+"Open Quests Menu\n|cffffffff"..
+"This Button open the quests menu.\n\n"..
+"|cffff0000Left-Click to open|r\n"..
+"|cff999999(Execution-Order: System)|r";
+
+MultiBot.tips.quests.talk =
+"Talk to NPC\n|cffffffff"..
+"This button tells the bots to talk to the selected NPC in order to take or return a quest.\n\n"..
+"|cffff0000Left-Click to order|r\n"..
+"|cff999999(Execution-Order: Raid, Party)|r";
+
+MultiBot.tips.quests.talkerror =
+"Please select an NPC to talk to.";
+
+MultiBot.tips.quests.questcomperror =
+"Please target a bot to ask its quests.";
+
+MultiBot.tips.quests.sendwhisp =
+"Ask to the bot";
+
+MultiBot.tips.quests.sendpartyraid =
+"Ask to Group or Raid.";
+
+MultiBot.tips.quests.completed =
+"Completed Quests\n|cffffffff"..
+"This button allows you to ask a bot or all bots for the list of completed quests.\n\n"..
+"|cffff0000Left-Click to open submenu|r\n"..
+"|cff999999(Execution-Order: Raid, Party, bot)|r";
+
+MultiBot.tips.quests.incompleted =
+"Incomplete Quests\n|cffffffff"..
+"This button allows you to ask a bot or all bots for the list of incomplete quests.\n\n"..
+"|cffff0000Left-Click to open submenu|r\n"..
+"|cff999999(Execution-Order: Raid, Party, bot)|r";
+
+MultiBot.tips.quests.allcompleted =
+"All Quests\n|cffffffff"..
+"This button allows you to ask a bot or all bots for the list of All Quests.\n\n"..
+"|cffff0000Left-Click to open submenu|r\n"..
+"|cff999999(Execution-Order: Raid, Party, bot)|r";
+
+MultiBot.tips.quests.incomplist =
+"Current quests from the bot(s)";
+
+MultiBot.tips.quests.complist =
+"List of completed quests of the bot(s)";
+
+MultiBot.tips.quests.alllist =
+"All quests of the bot(s)";
+
+MultiBot.tips.quests.compheader =
+"** Complete Quests **";
+
+MultiBot.tips.quests.incompheader =
+"** Incomplete Quests **";
+
+MultiBot.tips.quests.botsword =
+"Bots : ";
+
+-- USE GOBs --
+MultiBot.tips.quests.gobsmaster =
+"Use GoBs Menu\n|cffffffff"..
+"This button open the use Game Objects Menu.|r\n\n"..
+"|cffff0000Left-Click to Open|r\n"..
+"|cff999999(Execution-Order: System)|r";
+
+MultiBot.tips.quests.gobenter =
+"Use Game Object\n|cffffffff"..
+"This button opent a prompt to enter Game Object Name.\n\n"..
+"|cffff0000Left-Click to open prompt|r\n"..
+"|cff999999(Execution-Order: Bot)|r";
+
+MultiBot.tips.quests.gobsearch =
+"Search for Game Object\n|cffffffff"..
+"This button opent a frame that shows Game Object that bots can use.\n\n"..
+"|cffff0000Left-Click to open frame|r\n"..
+"|cff999999(Execution-Order: System)|r";
+
+MultiBot.tips.quests.goberrorname =
+"Please enter a valid Game Object Name.";
+
+MultiBot.tips.quests.gobselectboterror =
+"Please select the bot to send the command to.";
+
+MultiBot.tips.quests.gobsnameerror =
+"Please enter a name.";
+
+MultiBot.tips.quests.gobctrlctocopy =
+"CTRL + C To Copy";
+
+MultiBot.tips.quests.gobselectall =
+"Select All";
+
+MultiBot.tips.quests.gobsfound =
+"Game Objects Found";
+
+MultiBot.tips.quests.gobpromptname =
+"Game Object Name";
+
 -- DRINK --
 
 MultiBot.tips.drink = {}
-MultiBot.tips.drink.group = 
+MultiBot.tips.drink.group =
 "Group-Drink\n|cffffffff"..
 "With this Button you order the Group to drink.\n"..
-"The Execution-Order shows the Receiver for Commandos.|r\n\n"..
+"The Execution-Order shows the Receiver for Commands.|r\n\n"..
 "|cffff0000Left-Click to execute Group-Drink|r\n"..
 "|cff999999(Execution-Order: Raid, Party)|r";
 
 -- RELEASE --
 
 MultiBot.tips.release = {}
-MultiBot.tips.release.group = 
+MultiBot.tips.release.group =
 "Group-Release\n|cffffffff"..
 "With this Button the dead Bots will release there Ghosts to the next Graveyard.\n"..
 "The Execution-Order shows the Receiver for Commandos.|r\n\n"..
@@ -1196,7 +1432,7 @@ MultiBot.tips.release.group =
 -- REVIVE --
 
 MultiBot.tips.revive = {}
-MultiBot.tips.revive.group = 
+MultiBot.tips.revive.group =
 "Group-Revive\n|cffffffff"..
 "With this Button the Ghost-Bots will revive on the next Graveyard.\n"..
 "The Execution-Order shows the Receiver for Commandos.|r\n\n"..
@@ -1206,7 +1442,7 @@ MultiBot.tips.revive.group =
 -- SUMALL --
 
 MultiBot.tips.summon = {}
-MultiBot.tips.summon.group = 
+MultiBot.tips.summon.group =
 "Group-Summon\n|cffffffff"..
 "With this Button you summon the Group to your Position.\n"..
 "The Execution-Order shows the Receiver for Commandos.|r\n\n"..
@@ -1732,7 +1968,7 @@ MultiBot.tips.druid.dps.dpsDebuff =
 "|cffff0000Left-Click to enable or disable DPS-Debuff|r\n"..
 "|cf9999999(Execution-Order: Bot)|r";
 
-MultiBot.tips.druid.dps.dpsAoe = 
+MultiBot.tips.druid.dps.dpsAoe =
 "DPS-AOE|cffffffff\n"..
 "It enables the DPS-AOE-Strategies.\n"..
 "The Druid can only AOE as Cat or Caster.\n"..
@@ -1742,7 +1978,7 @@ MultiBot.tips.druid.dps.dpsAoe =
 "|cffff0000Left-Click to enable or disable DPS-AOE|r\n"..
 "|cf9999999(Execution-Order: Bot)|r";
 
-MultiBot.tips.druid.dps.dps = 
+MultiBot.tips.druid.dps.dps =
 "DPS|cffffffff\n"..
 "It enables the DPS-Strategies.\n"..
 "The Druid can only use DPS-Strategies as Cat.\n"..
@@ -1751,7 +1987,15 @@ MultiBot.tips.druid.dps.dps =
 "|cffff0000Left-Click to enable or disable DPS|r\n"..
 "|cf9999999(Execution-Order: Bot)|r";
 
-MultiBot.tips.druid.tankAssist = 
+MultiBot.tips.druid.dps.offheal =
+"OffHeal|cffffffff\n"..
+"This disable dps mode and enable offheal, \n"..
+"The bots will now focus damage but heal when necessary.\n"..
+"Only for feral duid.|r\n\n"..
+"|cffff0000Left-Click to enable or disable OffHeal|r\n"..
+"|cf9999999(Execution-Order: Bot)|r";
+
+MultiBot.tips.druid.tankAssist =
 "Tank-Assist|cffffffff\n"..
 "It enables the Tank-Assist-Strategies.\n"..
 "DPS-AOE, DPS-Assist and Tank-Assist are mutually exclusive.\n"..
@@ -1759,7 +2003,7 @@ MultiBot.tips.druid.tankAssist =
 "|cffff0000Left-Click to enable or disable Tank-Assist|r\n"..
 "|cf9999999(Execution-Order: Bot)|r";
 
-MultiBot.tips.druid.tank = 
+MultiBot.tips.druid.tank =
 "Tank|cffffffff\n"..
 "It enables the Tank-Strategies.\n"..
 "The Druid can only Tank as Bear.\n"..
@@ -1774,6 +2018,37 @@ MultiBot.tips.hunter = {}
 MultiBot.tips.hunter.dps = {}
 MultiBot.tips.hunter.naspect = {}
 MultiBot.tips.hunter.caspect = {}
+MultiBot.tips.hunter.pet = {}
+
+MultiBot.tips.hunter.pet.master =
+"Pet Commands|cffffffff\n"..
+"Opens a bar with multiple pet summoning options.|r\n\n"..
+"|cffff0000Left-Click to show options|r\n"..
+"|cff999999(Execution Order: System)|r";
+
+MultiBot.tips.hunter.pet.name =
+"Summon a pet by |cff00ff00its name|r\n"..
+"|cffffffffOpen a list of available pets and click a name to summon.|r\n\n"..
+"|cffff0000Left-Click to open the list|r\n"..
+"|cff999999(Execution Order: Bot)|r";
+
+MultiBot.tips.hunter.pet.id =
+"Summon a pet by |cff00ff00DB ID|r\n"..
+"|cffffffffUse a creature's database ID to summon it directly.|r\n\n"..
+"|cffff0000Left-Click to enter an ID|r\n"..
+"|cff999999(Execution Order: Bot)|r";
+
+MultiBot.tips.hunter.pet.family =
+"Summon random pet by |cff00ff00FAMILY|r\n"..
+"|cffffffffChoose a pet family to summon a random pet from that type.|r\n\n"..
+"|cffff0000Left-Click to select a family|r\n"..
+"|cff999999(Execution Order: Bot)|r";
+
+MultiBot.tips.hunter.pet.rename =
+"Rename your current pet\n"..
+"|cffffffffOpens a prompt to set a new name for your active pet.|r\n\n"..
+"|cffff0000Left-Click to rename|r\n"..
+"|cff999999(Execution Order: Bot)|r";
 
 MultiBot.tips.hunter.naspect.master =
 "Non-Combat-Buff|cffffffff\n"..
@@ -1859,7 +2134,7 @@ MultiBot.tips.hunter.dps.dpsDebuff =
 "|cffff0000Left-Click to enable or disable DPS-Debuff|r\n"..
 "|cf9999999(Execution-Order: Bot)|r";
 
-MultiBot.tips.hunter.dps.dpsAoe = 
+MultiBot.tips.hunter.dps.dpsAoe =
 "DPS-AOE|cffffffff\n"..
 "It enables the DPS-AOE-Strategies.\n"..
 "DPS-AOE, DPS-Assist and Tank-Assist are mutually exclusive.\n"..
@@ -1867,13 +2142,13 @@ MultiBot.tips.hunter.dps.dpsAoe =
 "|cffff0000Left-Click to enable or disable DPS-AOE|r\n"..
 "|cf9999999(Execution-Order: Bot)|r";
 
-MultiBot.tips.hunter.dps.dps = 
+MultiBot.tips.hunter.dps.dps =
 "DPS|cffffffff\n"..
 "It enables the DPS-Strategies.|r\n\n"..
 "|cffff0000Left-Click to enable or disable DPS|r\n"..
 "|cf9999999(Execution-Order: Bot)|r";
 
-MultiBot.tips.hunter.tankAssist = 
+MultiBot.tips.hunter.tankAssist =
 "Tank-Assist|cffffffff\n"..
 "It enables the Tank-Assist-Strategies.\n"..
 "DPS-AOE, DPS-Assist and Tank-Assist are mutually exclusive.\n"..
@@ -1970,7 +2245,7 @@ MultiBot.tips.mage.dps.dpsAssist =
 "|cffff0000Left-Click to enable or disable DPS-Assist|r\n"..
 "|cf9999999(Execution-Order: Bot)|r";
 
-MultiBot.tips.mage.dps.dpsAoe = 
+MultiBot.tips.mage.dps.dpsAoe =
 "DPS-AOE|cffffffff\n"..
 "It enables the DPS-AOE-Strategies.\n"..
 "DPS-AOE, DPS-Assist and Tank-Assist are mutually exclusive.\n"..
@@ -1978,7 +2253,7 @@ MultiBot.tips.mage.dps.dpsAoe =
 "|cffff0000Left-Click to enable or disable DPS-AOE|r\n"..
 "|cf9999999(Execution-Order: Bot)|r";
 
-MultiBot.tips.mage.tankAssist = 
+MultiBot.tips.mage.tankAssist =
 "Tank-Assist|cffffffff\n"..
 "It enables the Tank-Assist-Strategies.\n"..
 "DPS-AOE, DPS-Assist and Tank-Assist are mutually exclusive.\n"..
@@ -2148,7 +2423,7 @@ MultiBot.tips.paladin.dps.dpsAssist =
 "|cffff0000Left-Click to enable or disable DPS-Assist|r\n"..
 "|cf9999999(Execution-Order: Bot)|r";
 
-MultiBot.tips.paladin.dps.dpsAoe = 
+MultiBot.tips.paladin.dps.dpsAoe =
 "DPS-AOE|cffffffff\n"..
 "It enables the DPS-AOE-Strategies.\n"..
 "DPS-AOE, DPS-Assist and Tank-Assist are mutually exclusive.\n"..
@@ -2156,7 +2431,7 @@ MultiBot.tips.paladin.dps.dpsAoe =
 "|cffff0000Left-Click to enable or disable DPS-AOE|r\n"..
 "|cf9999999(Execution-Order: Bot)|r";
 
-MultiBot.tips.paladin.dps.dps = 
+MultiBot.tips.paladin.dps.dps =
 "DPS|cffffffff\n"..
 "It enables the DPS-Strategies.\n"..
 "Tank, DPS and Heal are mutually exclusive.\n"..
@@ -2164,7 +2439,15 @@ MultiBot.tips.paladin.dps.dps =
 "|cffff0000Left-Click to enable or disable DPS|r\n"..
 "|cf9999999(Execution-Order: Bot)|r";
 
-MultiBot.tips.paladin.tankAssist = 
+MultiBot.tips.paladin.dps.offheal =
+"OffHeal|cffffffff\n"..
+"This disable dps mode and enable offheal, \n"..
+"The bots will now focus damage but heal when necessary.\n"..
+"Only for feral duid.|r\n\n"..
+"|cffff0000Left-Click to enable or disable OffHeal|r\n"..
+"|cf9999999(Execution-Order: Bot)|r";
+
+MultiBot.tips.paladin.tankAssist =
 "Tank-Assist|cffffffff\n"..
 "It enables the Tank-Assist-Strategies.\n"..
 "DPS-AOE, DPS-Assist and Tank-Assist are mutually exclusive.\n"..
@@ -2172,7 +2455,7 @@ MultiBot.tips.paladin.tankAssist =
 "|cffff0000Left-Click to enable or disable Tank-Assist|r\n"..
 "|cf9999999(Execution-Order: Bot)|r";
 
-MultiBot.tips.paladin.tank = 
+MultiBot.tips.paladin.tank =
 "Tank|cffffffff\n"..
 "It enables the Tank-Strategies.\n"..
 "Tank, DPS and Heal are mutually exclusive.\n"..
@@ -2246,7 +2529,7 @@ MultiBot.tips.priest.dps.dpsDebuff =
 "|cffff0000Left-Click to enable or disable DPS-Debuff|r\n"..
 "|cf9999999(Execution-Order: Bot)|r";
 
-MultiBot.tips.priest.dps.dpsAoe = 
+MultiBot.tips.priest.dps.dpsAoe =
 "DPS-AOE|cffffffff\n"..
 "It enables the DPS-AOE-Strategies.\n"..
 "DPS-AOE, DPS-Assist ('Healer-DPS') and Tank-Assist are mutually exclusive.\n"..
@@ -2254,13 +2537,13 @@ MultiBot.tips.priest.dps.dpsAoe =
 "|cffff0000Left-Click to enable or disable DPS-AOE|r\n"..
 "|cf9999999(Execution-Order: Bot)|r";
 
-MultiBot.tips.priest.dps.dps = 
+MultiBot.tips.priest.dps.dps =
 "DPS|cffffffff\n"..
 "It enables the DPS-Strategies.|r\n\n"..
 "|cffff0000Left-Click to enable or disable DPS|r\n"..
 "|cf9999999(Execution-Order: Bot)|r";
 
-MultiBot.tips.priest.tankAssist = 
+MultiBot.tips.priest.tankAssist =
 "Tank-Assist|cffffffff\n"..
 "It enables the Tank-Assist-Strategies.\n"..
 "DPS-AOE, DPS-Assist ('Healer-DPS') and Tank-Assist are mutually exclusive.\n"..
@@ -2287,7 +2570,7 @@ MultiBot.tips.rogue.dps.dpsAssist =
 "|cffff0000Left-Click to enable or disable DPS-Assist|r\n"..
 "|cf9999999(Execution-Order: Bot)|r";
 
-MultiBot.tips.rogue.dps.dpsAoe = 
+MultiBot.tips.rogue.dps.dpsAoe =
 "DPS-AOE|cffffffff\n"..
 "It enables the DPS-AOE-Strategies.\n"..
 "DPS-AOE, DPS-Assist and Tank-Assist are mutually exclusive.\n"..
@@ -2295,13 +2578,13 @@ MultiBot.tips.rogue.dps.dpsAoe =
 "|cffff0000Left-Click to enable or disable DPS-AOE|r\n"..
 "|cf9999999(Execution-Order: Bot)|r";
 
-MultiBot.tips.rogue.dps.dps = 
+MultiBot.tips.rogue.dps.dps =
 "DPS|cffffffff\n"..
 "It enables the DPS-Strategies.|r\n\n"..
 "|cffff0000Left-Click to enable or disable DPS|r\n"..
 "|cf9999999(Execution-Order: Bot)|r";
 
-MultiBot.tips.rogue.tankAssist = 
+MultiBot.tips.rogue.tankAssist =
 "Tank-Assist|cffffffff\n"..
 "It enables the Tank-Assist-Strategies.\n"..
 "DPS-AOE, DPS-Assist and Tank-Assist are mutually exclusive.\n"..
@@ -2419,7 +2702,7 @@ MultiBot.tips.shaman.dps.dpsAssist =
 "|cffff0000Left-Click to enable or disable DPS-Assist|r\n"..
 "|cf9999999(Execution-Order: Bot)|r";
 
-MultiBot.tips.shaman.dps.dpsAoe = 
+MultiBot.tips.shaman.dps.dpsAoe =
 "DPS-AOE|cffffffff\n"..
 "It enables the DPS-AOE-Strategies.\n"..
 "DPS-AOE, DPS-Assist and Tank-Assist are mutually exclusive.\n"..
@@ -2427,7 +2710,7 @@ MultiBot.tips.shaman.dps.dpsAoe =
 "|cffff0000Left-Click to enable or disable DPS-AOE|r\n"..
 "|cf9999999(Execution-Order: Bot)|r";
 
-MultiBot.tips.shaman.tankAssist = 
+MultiBot.tips.shaman.tankAssist =
 "Tank-Assist|cffffffff\n"..
 "It enables the Tank-Assist-Strategies.\n"..
 "DPS-AOE, DPS-Assist and Tank-Assist are mutually exclusive.\n"..
@@ -2440,6 +2723,140 @@ MultiBot.tips.shaman.tankAssist =
 MultiBot.tips.warlock = {}
 MultiBot.tips.warlock.dps = {}
 MultiBot.tips.warlock.buff = {}
+
+-- NEW
+MultiBot.tips.warlock.curses = {}
+MultiBot.tips.warlock.stones = {}
+MultiBot.tips.warlock.soulstones = {}
+MultiBot.tips.warlock.pets = {}
+
+MultiBot.tips.warlock.stones.master =
+"Weapon Stone Select|cffffffff\n"..
+"Choose which weapon stone the bot will apply.|r\n\n"..
+"|cffff0000Left-click to open menu|r\n"..
+"|cff999999(Execution Order: Bot)|r";
+
+MultiBot.tips.warlock.stones.spellstone =
+"Spellstone|cffffffff\n"..
+"Apply Spellstone (non-combat strategy)|r\n\n"..
+"|cffff0000Left-click to Apply|r\n"..
+"|cffff0000Left-click again to Remove|r\n"..
+"|cff999999(Execution Order: Bot)|r";
+
+MultiBot.tips.warlock.stones.firestone =
+"Firestone|cffffffff\n"..
+"Apply Firestone (non-combat strategy)|r\n\n"..
+"|cffff0000Left-click to Apply|r\n"..
+"|cffff0000Left-click again to Remove|r\n"..
+"|cff999999(Execution Order: Bot)|r";
+
+MultiBot.tips.warlock.soulstones.masterbutton =
+"NC SoulStone Menu|cffffffff\n"..
+"Specify which bot should receive the SoulStone.|r\n\n"..
+"|cffff0000Left-click to open menu|r\n"..
+"|cff999999(Execution Order: Bot)|r";
+
+MultiBot.tips.warlock.soulstones.self =
+"Self|cffffffff\n"..
+"The bot will apply the SoulStone to itself (non-combat strategy)|r\n\n"..
+"|cffff0000Left-click to Activate|r\n"..
+"|cffff0000Left-click again to Deactivate|r\n"..
+"|cff999999(Execution Order: Bot)|r";
+
+MultiBot.tips.warlock.soulstones.master =
+"Master|cffffffff\n"..
+"The bot will apply the SoulStone to you (non-combat strategy)|r\n\n"..
+"|cffff0000Left-click to Activate|r\n"..
+"|cffff0000Left-click again to Deactivate|r\n"..
+"|cff999999(Execution Order: Bot)|r";
+
+MultiBot.tips.warlock.soulstones.tank =
+"Tank|cffffffff\n"..
+"The bot will apply the SoulStone to the Tank (non-combat strategy)|r\n\n"..
+"|cffff0000Left-click to Activate|r\n"..
+"|cffff0000Left-click again to Deactivate|r\n"..
+"|cff999999(Execution Order: Bot)|r";
+
+MultiBot.tips.warlock.soulstones.healer =
+"Healer|cffffffff\n"..
+"The bot will apply the SoulStone to the Healer (non-combat strategy)|r\n\n"..
+"|cffff0000Left-click to Activate|r\n"..
+"|cffff0000Left-click again to Deactivate|r\n"..
+"|cff999999(Execution Order: Bot)|r";
+
+MultiBot.tips.warlock.pets.master =
+"Pet Select|cffffffff\n"..
+"Choose which demon the bot should summon.|r\n\n"..
+"|cffff0000Left-click to Apply|r\n"..
+"|cff999999(Execution Order: Bot)|r";
+
+MultiBot.tips.warlock.pets.imp =
+"Imp|cffffffff\n"..
+"Summon Imp|r\n\n"..
+"|cffff0000Left-click to Summon|r\n"..
+"|cff999999(Execution Order: Bot)|r";
+
+MultiBot.tips.warlock.pets.voidwalker =
+"Voidwalker|cffffffff\n"..
+"Summon Voidwalker|r\n\n"..
+"|cffff0000Left-click to Summon|r\n"..
+"|cff999999(Execution Order: Bot)|r";
+
+MultiBot.tips.warlock.pets.succubus =
+"Succubus|cffffffff\n"..
+"Summon Succubus|r\n\n"..
+"|cffff0000Left-click to Summon|r\n"..
+"|cff999999(Execution Order: Bot)|r";
+
+MultiBot.tips.warlock.pets.felhunter =
+"Felhunter|cffffffff\n"..
+"Summon Felhunter|r\n\n"..
+"|cffff0000Left-click to Summon|r\n"..
+"|cff999999(Execution Order: Bot)|r";
+
+MultiBot.tips.warlock.pets.felguard =
+"Felguard|cffffffff\n"..
+"Summon Felguard|r\n\n"..
+"|cffff0000Left-click to Summon|r\n"..
+"|cff999999(Execution Order: Bot)|r";
+
+MultiBot.tips.warlock.curses.master =
+"Curse Select|cffffffff\n"..
+"This Control allows you to select, a curse to apply.|r\n\n"..
+"|cffff0000Left-click to open the curse menu\n"..
+"and choose which curse the bot will apply.\n"..
+"The currently active curse is shown greyed-out.|r\n"..
+"|cff999999(Execution Order: Bot)|r";
+
+MultiBot.tips.warlock.curses.agony =
+"Curse of Agony|cffffffff|r\n\n"..
+"|cffff0000Left-Click to apply this curse.|r\n"..
+"|cff999999(Execution-Order: Bot)|r";
+
+MultiBot.tips.warlock.curses.elements =
+"Curse of the Elements|cffffffff|r\n\n"..
+"|cffff0000Left-Click to apply this curse.|r\n"..
+"|cff999999(Execution-Order: Bot)|r";
+
+MultiBot.tips.warlock.curses.exhaustion =
+"Curse of Exhaustion|cffffffff|r\n\n"..
+"|cffff0000Left-Click to apply this curse.|r\n"..
+"|cff999999(Execution-Order: Bot)|r";
+
+MultiBot.tips.warlock.curses.doom =
+"Curse of Doom|cffffffff|r\n\n"..
+"|cffff0000Left-Click to apply this curse.|r\n"..
+"|cff999999(Execution-Order: Bot)|r";
+
+MultiBot.tips.warlock.curses.weakness =
+"Curse of Weakness|cffffffff|r\n\n"..
+"|cffff0000Left-Click to apply this curse.|r\n"..
+"|cff999999(Execution-Order: Bot)|r";
+
+MultiBot.tips.warlock.curses.tongues =
+"Curse of Tongues|cffffffff|r\n\n"..
+"|cffff0000Left-Click to apply this curse.|r\n"..
+"|cff999999(Execution-Order: Bot)|r";
 
 MultiBot.tips.warlock.buff.master =
 "Buff|cffffffff\n"..
@@ -2487,7 +2904,7 @@ MultiBot.tips.warlock.dps.dpsDebuff =
 "|cffff0000Left-Click to enable or disable DPS-Debuff|r\n"..
 "|cf9999999(Execution-Order: Bot)|r";
 
-MultiBot.tips.warlock.dps.dpsAoe = 
+MultiBot.tips.warlock.dps.dpsAoe =
 "DPS-AOE|cffffffff\n"..
 "It enables the DPS-AOE-Strategies.\n"..
 "DPS-AOE, DPS-Assist and Tank-Assist are mutually exclusive.\n"..
@@ -2495,7 +2912,7 @@ MultiBot.tips.warlock.dps.dpsAoe =
 "|cffff0000Left-Click to enable or disable DPS-AOE|r\n"..
 "|cf9999999(Execution-Order: Bot)|r";
 
-MultiBot.tips.warlock.dps.dps = 
+MultiBot.tips.warlock.dps.dps =
 "DPS|cffffffff\n"..
 "It enables the DPS-Strategies.\n"..
 "DPS and Tank are mutually exclusive.\n"..
@@ -2503,7 +2920,7 @@ MultiBot.tips.warlock.dps.dps =
 "|cffff0000Left-Click to enable or disable DPS|r\n"..
 "|cf9999999(Execution-Order: Bot)|r";
 
-MultiBot.tips.warlock.tankAssist = 
+MultiBot.tips.warlock.tankAssist =
 "Tank-Assist|cffffffff\n"..
 "It enables the Tank-Assist-Strategies.\n"..
 "DPS-AOE, DPS-Assist and Tank-Assist are mutually exclusive.\n"..
@@ -2511,7 +2928,7 @@ MultiBot.tips.warlock.tankAssist =
 "|cffff0000Left-Click to enable or disable Tank-Assist|r\n"..
 "|cf9999999(Execution-Order: Bot)|r";
 
-MultiBot.tips.warlock.tank = 
+MultiBot.tips.warlock.tank =
 "Tank|cffffffff\n"..
 "It enables the Tank-Strategies.\n"..
 "DPS and Tank are mutually exclusive.\n"..
@@ -2538,7 +2955,7 @@ MultiBot.tips.warrior.dps.dpsAssist =
 "|cffff0000Left-Click to enable or disable DPS-Assist|r\n"..
 "|cf9999999(Execution-Order: Bot)|r";
 
-MultiBot.tips.warrior.dps.dpsAoe = 
+MultiBot.tips.warrior.dps.dpsAoe =
 "DPS-AOE|cffffffff\n"..
 "It enables the DPS-AOE-Strategies.\n"..
 "DPS-AOE, DPS-Assist and Tank-Assist are mutually exclusive.\n"..
@@ -2546,7 +2963,7 @@ MultiBot.tips.warrior.dps.dpsAoe =
 "|cffff0000Left-Click to enable or disable DPS-AOE|r\n"..
 "|cf9999999(Execution-Order: Bot)|r";
 
-MultiBot.tips.warrior.tankAssist = 
+MultiBot.tips.warrior.tankAssist =
 "Tank-Assist|cffffffff\n"..
 "It enables the Tank-Assist-Strategies.\n"..
 "DPS-AOE, DPS-Assist and Tank-Assist are mutually exclusive.\n"..
@@ -2554,7 +2971,7 @@ MultiBot.tips.warrior.tankAssist =
 "|cffff0000Left-Click to enable or disable Tank-Assist|r\n"..
 "|cf9999999(Execution-Order: Bot)|r";
 
-MultiBot.tips.warrior.tank = 
+MultiBot.tips.warrior.tank =
 "Tank|cffffffff\n"..
 "It enables the Tank-Strategies.|r\n\n"..
 "|cffff0000Left-Click to enable or disable Tank|r\n"..
@@ -2563,6 +2980,28 @@ MultiBot.tips.warrior.tank =
 -- EVERY --
 
 MultiBot.tips.every = {}
+
+MultiBot.tips.every.misc =
+"Miscellaneous|cffffffff\n"..
+"Opens the menu of miscellaneous actions.\n"..
+"Includes: Wipe, Autogear, etc.|r\n\n"..
+"|cffff0000Left-click to toggle this menu|r\n"..
+"|cff999999(Execution order: System)|r"
+
+MultiBot.tips.every.autogear =
+"AutoGear|cffffffff\n"..
+"Automatically equips this Bot based on\n"..
+"your AutoGear limits (quality / GearScore).|r\n\n"..
+"|cffff0000Left-click to start AutoGear|r\n"..
+"|cff999999(Execution order: Bot)|r";
+
+MultiBot.tips.every.maintenance =
+"Maintenance|cffffffff\n"..
+"Enable bot to learn all available spells and skills, \n"..
+"supplement consumables, enchant gear, and repair.|r\n\n"..
+"|cffff0000Left-click to start Maintenance|r\n"..
+"|cff999999(Execution order: Bot)|r";
+
 MultiBot.tips.every.summon =
 "Summon|cffffffff\n"..
 "Summons this Bot to your Position.|r\n\n"..
@@ -2620,10 +3059,551 @@ MultiBot.tips.every.talent =
 "|cffff0000Left-Click to open or close the Talents|r\n"..
 "|cff999999(Execution-Order: Bot)|r";
 
+-- WIPE COMMAND --
+
+MultiBot.tips.every.wipe =
+"Wipe|cffffffff\n"..
+"Fully resets the bot by killing it and resurrecting it,\n"..
+"useful to clear its state (position, health, mana, etc.).|r\n\n"..
+"|cffff0000Left-click: sends the wipe command to the selected bot|r\n"..
+"|cff999999(Execution order: Bot)|r";
+
+ -- SET TALENTS --
+
+MultiBot.tips.every.settalent =
+"Set Talents|cffffffff\n"..
+"Displays a menu of available specializations (PvE/PvP) for the selected bot.\n"..
+"Secondary specialization unlocks at level 40.|r\n\n"..
+"|cffff0000Left-click to toggle the bot's talent template selector|r\n"..
+"|cff999999(Execution order: Bot)|r"
+
+-- DeathKnight
+MultiBot.tips.spec.dkbloodpve =
+  "Blood – PvE|cffffffff\n"..
+  "Focused on self-healing and survivability in PvE.\n"..
+  "Secondary spec unlocked at level 40.|r\n\n"..
+  "|cffff0000Left-click to set as primary spec|r\n"..
+  "|cffff0000Right-click to set as secondary spec|r\n"..
+  "|cff999999(Execution order: Bot)|r";
+
+MultiBot.tips.spec.dkbloodpvp =
+  "Blood – PvP|cffffffff\n"..
+  "Ideal for flag control and durability in PvP.\n"..
+  "Secondary spec unlocked at level 40.|r\n\n"..
+  "|cffff0000Left-click to set as primary spec|r\n"..
+  "|cffff0000Right-click to set as secondary spec|r\n"..
+  "|cff999999(Execution order: Bot)|r";
+
+MultiBot.tips.spec.dkbfrostpve =
+  "Frost – PvE|cffffffff\n"..
+  "Optimized for burst damage and slows in PvE.\n"..
+  "Secondary spec unlocked at level 40.|r\n\n"..
+  "|cffff0000Left-click to set as primary spec|r\n"..
+  "|cffff0000Right-click to set as secondary spec|r\n"..
+  "|cff999999(Execution order: Bot)|r";
+
+MultiBot.tips.spec.dkbfrostpvp =
+  "Frost – PvP|cffffffff\n"..
+  "High burst and crowd control for PvP.\n"..
+  "Secondary spec unlocked at level 40.|r\n\n"..
+  "|cffff0000Left-click to set as primary spec|r\n"..
+  "|cffff0000Right-click to set as secondary spec|r\n"..
+  "|cff999999(Execution order: Bot)|r";
+
+MultiBot.tips.spec.dkunhopve =
+  "Unholy – PvE|cffffffff\n"..
+  "Strong AoE and pet synergy in PvE.\n"..
+  "Secondary spec unlocked at level 40.|r\n\n"..
+  "|cffff0000Left-click to set as primary spec|r\n"..
+  "|cffff0000Right-click to set as secondary spec|r\n"..
+  "|cff999999(Execution order: Bot)|r";
+
+MultiBot.tips.spec.dkunhopvp =
+  "Unholy – PvP|cffffffff\n"..
+  "Persistent DOT pressure in PvP.\n"..
+  "Secondary spec unlocked at level 40.|r\n\n"..
+  "|cffff0000Left-click to set as primary spec|r\n"..
+  "|cffff0000Right-click to set as secondary spec|r\n"..
+  "|cff999999(Execution order: Bot)|r";
+
+MultiBot.tips.spec.dkdoublepve =
+  "Double Template – PvE|cffffffff\n"..
+  "Quickly test two builds in PvE.\n"..
+  "Secondary spec unlocked at level 40.|r\n\n"..
+  "|cffff0000Left-click to set as primary spec|r\n"..
+  "|cffff0000Right-click to set as secondary spec|r\n"..
+  "|cff999999(Execution order: Bot)|r";
+
+
+-- Druid
+MultiBot.tips.spec.druidbalpve =
+  "Balance – PvE|cffffffff\n"..
+  "Eclipse bursts and magic damage optimized for PvE.\n"..
+  "Secondary spec unlocked at level 40.|r\n\n"..
+  "|cffff0000Left-click to set as primary spec|r\n"..
+  "|cffff0000Right-click to set as secondary spec|r\n"..
+  "|cff999999(Execution order: Bot)|r";
+
+MultiBot.tips.spec.druidbalpvp =
+  "Balance – PvP|cffffffff\n"..
+  "Starfall and roots for PvP crowd control.\n"..
+  "Secondary spec unlocked at level 40.|r\n\n"..
+  "|cffff0000Left-click to set as primary spec|r\n"..
+  "|cffff0000Right-click to set as secondary spec|r\n"..
+  "|cff999999(Execution order: Bot)|r";
+
+MultiBot.tips.spec.druidcatpve =
+  "Feral (Cat) – PvE|cffffffff\n"..
+  "Hybrid melee DPS for raid contributions.\n"..
+  "Secondary spec unlocked at level 40.|r\n\n"..
+  "|cffff0000Left-click to set as primary spec|r\n"..
+  "|cffff0000Right-click to set as secondary spec|r\n"..
+  "|cff999999(Execution order: Bot)|r";
+
+MultiBot.tips.spec.druidcatpvp =
+  "Feral (Cat) – PvP|cffffffff\n"..
+  "Bleeds and burst for PvP skirmishes.\n"..
+  "Secondary spec unlocked at level 40.|r\n\n"..
+  "|cffff0000Left-click to set as primary spec|r\n"..
+  "|cffff0000Right-click to set as secondary spec|r\n"..
+  "|cff999999(Execution order: Bot)|r";
+
+MultiBot.tips.spec.druidbearpve =
+  "Feral (Bear) – PvE|cffffffff\n"..
+  "Primary raid tank with high survivability.\n"..
+  "Secondary spec unlocked at level 40.|r\n\n"..
+  "|cffff0000Left-click to set as primary spec|r\n"..
+  "|cffff0000Right-click to set as secondary spec|r\n"..
+  "|cff999999(Execution order: Bot)|r";
+
+MultiBot.tips.spec.druidrestopve =
+  "Restoration – PvE|cffffffff\n"..
+  "Powerful HoTs for raid healing.\n"..
+  "Secondary spec unlocked at level 40.|r\n\n"..
+  "|cffff0000Left-click to set as primary spec|r\n"..
+  "|cffff0000Right-click to set as secondary spec|r\n"..
+  "|cff999999(Execution order: Bot)|r";
+
+MultiBot.tips.spec.druidrestopvp =
+  "Restoration – PvP|cffffffff\n"..
+  "Shields and CC to survive in PvP.\n"..
+  "Secondary spec unlocked at level 40.|r\n\n"..
+  "|cffff0000Left-click to set as primary spec|r\n"..
+  "|cffff0000Right-click to set as secondary spec|r\n"..
+  "|cff999999(Execution order: Bot)|r";
+
+
+-- Hunter
+MultiBot.tips.spec.huntbmpve =
+  "Beast Mastery – PvE|cffffffff\n"..
+  "Pet-focused damage and utility in PvE.\n"..
+  "Secondary spec unlocked at level 40.|r\n\n"..
+  "|cffff0000Left-click to set as primary spec|r\n"..
+  "|cffff0000Right-click to set as secondary spec|r\n"..
+  "|cff999999(Execution order: Bot)|r";
+
+MultiBot.tips.spec.huntbmpvp =
+  "Beast Mastery – PvP|cffffffff\n"..
+  "Burst and CC immunity via your pet in PvP.\n"..
+  "Secondary spec unlocked at level 40.|r\n\n"..
+  "|cffff0000Left-click to set as primary spec|r\n"..
+  "|cffff0000Right-click to set as secondary spec|r\n"..
+  "|cff999999(Execution order: Bot)|r";
+
+MultiBot.tips.spec.huntmarkpve =
+  "Marksmanship – PvE|cffffffff\n"..
+  "High single-target burst with precision shots.\n"..
+  "Secondary spec unlocked at level 40.|r\n\n"..
+  "|cffff0000Left-click to set as primary spec|r\n"..
+  "|cffff0000Right-click to set as secondary spec|r\n"..
+  "|cff999999(Execution order: Bot)|r";
+
+MultiBot.tips.spec.huntmarkpvp =
+  "Marksmanship – PvP|cffffffff\n"..
+  "Burst damage and traps for PvP control.\n"..
+  "Secondary spec unlocked at level 40.|r\n\n"..
+  "|cffff0000Left-click to set as primary spec|r\n"..
+  "|cffff0000Right-click to set as secondary spec|r\n"..
+  "|cff999999(Execution order: Bot)|r";
+
+MultiBot.tips.spec.huntsurvpve =
+  "Survival – PvE|cffffffff\n"..
+  "Utility and DoTs in PvE encounters.\n"..
+  "Secondary spec unlocked at level 40.|r\n\n"..
+  "|cffff0000Left-click to set as primary spec|r\n"..
+  "|cffff0000Right-click to set as secondary spec|r\n"..
+  "|cff999999(Execution order: Bot)|r";
+
+MultiBot.tips.spec.huntsurvpvp =
+  "Survival – PvP|cffffffff\n"..
+  "Traps and crowd control for PvP.\n"..
+  "Secondary spec unlocked at level 40.|r\n\n"..
+  "|cffff0000Left-click to set as primary spec|r\n"..
+  "|cffff0000Right-click to set as secondary spec|r\n"..
+  "|cff999999(Execution order: Bot)|r";
+
+
+-- Mage
+MultiBot.tips.spec.magearcapve =
+  "Arcane – PvE|cffffffff\n"..
+  "Mana management and burst spells for PvE.\n"..
+  "Secondary spec unlocked at level 40.|r\n\n"..
+  "|cffff0000Left-click to set as primary spec|r\n"..
+  "|cffff0000Right-click to set as secondary spec|r\n"..
+  "|cff999999(Execution order: Bot)|r";
+
+MultiBot.tips.spec.magearcapvp =
+  "Arcane – PvP|cffffffff\n"..
+  "Mobility and shields for PvP skirmishes.\n"..
+  "Secondary spec unlocked at level 40.|r\n\n"..
+  "|cffff0000Left-click to set as primary spec|r\n"..
+  "|cffff0000Right-click to set as secondary spec|r\n"..
+  "|cff999999(Execution order: Bot)|r";
+
+MultiBot.tips.spec.magefirepve =
+  "Fire – PvE|cffffffff\n"..
+  "Ignites and AoE flame bursts for PvE.\n"..
+  "Secondary spec unlocked at level 40.|r\n\n"..
+  "|cffff0000Left-click to set as primary spec|r\n"..
+  "|cffff0000Right-click to set as secondary spec|r\n"..
+  "|cff999999(Execution order: Bot)|r";
+
+MultiBot.tips.spec.magefirepvp =
+  "Fire – PvP|cffffffff\n"..
+  "Scorch and crowd control for PvP.\n"..
+  "Secondary spec unlocked at level 40.|r\n\n"..
+  "|cffff0000Left-click to set as primary spec|r\n"..
+  "|cffff0000Right-click to set as secondary spec|r\n"..
+  "|cff999999(Execution order: Bot)|r";
+
+MultiBot.tips.spec.magefrostfirepve =
+  "Frostfire – PvE|cffffffff\n"..
+  "Combines fire and frost for unique burst.\n"..
+  "Secondary spec unlocked at level 40.|r\n\n"..
+  "|cffff0000Left-click to set as primary spec|r\n"..
+  "|cffff0000Right-click to set as secondary spec|r\n"..
+  "|cff999999(Execution order: Bot)|r";
+
+MultiBot.tips.spec.magefrostpve =
+  "Frost – PvE|cffffffff\n"..
+  "Fingers of Frost and slows for PvE.\n"..
+  "Secondary spec unlocked at level 40.|r\n\n"..
+  "|cffff0000Left-click to set as primary spec|r\n"..
+  "|cffff0000Right-click to set as secondary spec|r\n"..
+  "|cff999999(Execution order: Bot)|r";
+
+MultiBot.tips.spec.magefrostpvp =
+  "Frost – PvP|cffffffff\n"..
+  "Shatter combos and roots for PvP.\n"..
+  "Secondary spec unlocked at level 40.|r\n\n"..
+  "|cffff0000Left-click to set as primary spec|r\n"..
+  "|cffff0000Right-click to set as secondary spec|r\n"..
+  "|cff999999(Execution order: Bot)|r";
+
+
+-- Paladin
+MultiBot.tips.spec.paladinholypve =
+  "Holy – PvE|cffffffff\n"..
+  "Powerful raid healing.\n"..
+  "Secondary spec unlocked at level 40.|r\n\n"..
+  "|cffff0000Left-click to set as primary spec|r\n"..
+  "|cffff0000Right-click to set as secondary spec|r\n"..
+  "|cff999999(Execution order: Bot)|r";
+
+MultiBot.tips.spec.paladinholypvp =
+  "Holy – PvP|cffffffff\n"..
+  "Bubble and dispels for PvP survival.\n"..
+  "Secondary spec unlocked at level 40.|r\n\n"..
+  "|cffff0000Left-click to set as primary spec|r\n"..
+  "|cffff0000Right-click to set as secondary spec|r\n"..
+  "|cff999999(Execution order: Bot)|r";
+
+MultiBot.tips.spec.paladinprotpve =
+  "Protection – PvE|cffffffff\n"..
+  "Main raid tanking.\n"..
+  "Secondary spec unlocked at level 40.|r\n\n"..
+  "|cffff0000Left-click to set as primary spec|r\n"..
+  "|cffff0000Right-click to set as secondary spec|r\n"..
+  "|cff999999(Execution order: Bot)|r";
+
+MultiBot.tips.spec.paladinprotpvp =
+  "Protection – PvP|cffffffff\n"..
+  "Flag carrying and durability in PvP.\n"..
+  "Secondary spec unlocked at level 40.|r\n\n"..
+  "|cffff0000Left-click to set as primary spec|r\n"..
+  "|cffff0000Right-click to set as secondary spec|r\n"..
+  "|cff999999(Execution order: Bot)|r";
+
+MultiBot.tips.spec.paladinretpve =
+  "Retribution – PvE|cffffffff\n"..
+  "Offensive burst and support.\n"..
+  "Secondary spec unlocked at level 40.|r\n\n"..
+  "|cffff0000Left-click to set as primary spec|r\n"..
+  "|cffff0000Right-click to set as secondary spec|r\n"..
+  "|cff999999(Execution order: Bot)|r";
+
+MultiBot.tips.spec.paladinretpvp =
+  "Retribution – PvP|cffffffff\n"..
+  "Control and burst in PvP.\n"..
+  "Secondary spec unlocked at level 40.|r\n\n"..
+  "|cffff0000Left-click to set as primary spec|r\n"
+  .."|cffff0000Right-click to set as secondary spec|r\n"
+  .."|cff999999(Execution order: Bot)|r";
+
+
+-- Priest
+MultiBot.tips.spec.priestdiscipve =
+  "Discipline – PvE|cffffffff\n"..
+  "Absorbs and shields for raid support.\n"..
+  "Secondary spec unlocked at level 40.|r\n\n"..
+  "|cffff0000Left-click to set as primary spec|r\n"..
+  "|cffff0000Right-click to set as secondary spec|r\n"..
+  "|cff999999(Execution order: Bot)|r";
+
+MultiBot.tips.spec.priestdiscipvp =
+  "Discipline – PvP|cffffffff\n"..
+  "Burst healing and Penances for PvP.\n"..
+  "Secondary spec unlocked at level 40.|r\n\n"..
+  "|cffff0000Left-click to set as primary spec|r\n"
+  .."|cffff0000Right-click to set as secondary spec|r\n"
+  .."|cff999999(Execution order: Bot)|r";
+
+MultiBot.tips.spec.priestholypve =
+  "Holy – PvE|cffffffff\n"..
+  "Sanctuary and CoH for raid healing.\n"..
+  "Secondary spec unlocked at level 40.|r\n\n"..
+  "|cffff0000Left-click to set as primary spec|r\n"
+  .."|cffff0000Right-click to set as secondary spec|r\n"
+  .."|cff999999(Execution order: Bot)|r";
+
+MultiBot.tips.spec.priestholypvp =
+  "Holy – PvP|cffffffff\n"..
+  "Guardian Spirit and burst heal in PvP.\n"..
+  "Secondary spec unlocked at level 40.|r\n\n"..
+  "|cffff0000Left-click to set as primary spec|r\n"
+  .."|cffff0000Right-click to set as secondary spec|r\n"
+  .."|cff999999(Execution order: Bot)|r";
+
+MultiBot.tips.spec.priestshadowpve =
+  "Shadow – PvE|cffffffff\n"..
+  "DOT pressure and Insanity for PvE.\n"..
+  "Secondary spec unlocked at level 40.|r\n\n"..
+  "|cffff0000Left-click to set as primary spec|r\n"
+  .."|cffff0000Right-click to set as secondary spec|r\n"
+  .."|cff999999(Execution order: Bot)|r";
+
+MultiBot.tips.spec.priestshadowpvp =
+  "Shadow – PvP|cffffffff\n"..
+  "Silence and pressure in PvP.\n"..
+  "Secondary spec unlocked at level 40.|r\n\n"..
+  "|cffff0000Left-click to set as primary spec|r\n"
+  .."|cffff0000Right-click to set as secondary spec|r\n"
+  .."|cff999999(Execution order: Bot)|r";
+
+
+-- Rogue
+MultiBot.tips.spec.rogassapve =
+  "Assassination – PvE|cffffffff\n"..
+  "Poisons and DOTs for sustained DPS.\n"..
+  "Secondary spec unlocked at level 40.|r\n\n"..
+  "|cffff0000Left-click to set as primary spec|r\n"
+  .."|cffff0000Right-click to set as secondary spec|r\n"
+  .."|cff999999(Execution order: Bot)|r";
+
+MultiBot.tips.spec.rogassapvp =
+  "Assassination – PvP|cffffffff\n"..
+  "Vendetta and burst for PvP.\n"..
+  "Secondary spec unlocked at level 40.|r\n\n"..
+  "|cffff0000Left-click to set as primary spec|r\n"
+  .."|cffff0000Right-click to set as secondary spec|r\n"
+  .."|cff999999(Execution order: Bot)|r";
+
+MultiBot.tips.spec.rogcombatpve =
+  "Combat – PvE|cffffffff\n"..
+  "Cleave and energy for sustained DPS.\n"..
+  "Secondary spec unlocked at level 40.|r\n\n"..
+  "|cffff0000Left-click to set as primary spec|r\n"
+  .."|cffff0000Right-click to set as secondary spec|r\n"
+  .."|cff999999(Execution order: Bot)|r";
+
+MultiBot.tips.spec.rogcombatpvp =
+  "Combat – PvP|cffffffff\n"..
+  "Extended burst for PvP skirmishes.\n"..
+  "Secondary spec unlocked at level 40.|r\n\n"..
+  "|cffff0000Left-click to set as primary spec|r\n"
+  .."|cffff0000Right-click to set as secondary spec|r\n"
+  .."|cff999999(Execution order: Bot)|r";
+
+MultiBot.tips.spec.rogsubtipve =
+  "Subtlety – PvE|cffffffff\n"..
+  "Backstab and energy for intense DPS.\n"..
+  "Secondary spec unlocked at level 40.|r\n\n"..
+  "|cffff0000Left-click to set as primary spec|r\n"
+  .."|cffff0000Right-click to set as secondary spec|r\n"
+  .."|cff999999(Execution order: Bot)|r";
+
+MultiBot.tips.spec.rogsubtipvp =
+  "Subtlety – PvP|cffffffff\n"..
+  "Shadowdance and control for PvP.\n"..
+  "Secondary spec unlocked at level 40.|r\n\n"..
+  "|cffff0000Left-click to set as primary spec|r\n"
+  .."|cffff0000Right-click to set as secondary spec|r\n"
+  .."|cff999999(Execution order: Bot)|r";
+
+
+-- Shaman
+MultiBot.tips.spec.shamanelempve =
+  "Elemental – PvE|cffffffff\n"..
+  "Lava Burst and Maelstrom optimized for PvE.\n"..
+  "Secondary spec unlocked at level 40.|r\n\n"..
+  "|cffff0000Left-click to set as primary spec|r\n"
+  .."|cffff0000Right-click to set as secondary spec|r\n"
+  .."|cff999999(Execution order: Bot)|r";
+
+MultiBot.tips.spec.shamanelempvp =
+  "Elemental – PvP|cffffffff\n"..
+  "Burst and knockbacks for PvP skirmishes.\n"..
+  "Secondary spec unlocked at level 40.|r\n\n"..
+  "|cffff0000Left-click to set as primary spec|r\n"
+  .."|cffff0000Right-click to set as secondary spec|r\n"
+  .."|cff999999(Execution order: Bot)|r";
+
+MultiBot.tips.spec.shamanenhpve =
+  "Enhancement – PvE|cffffffff\n"..
+  "Dual-wield and Maelstrom for PvE.\n"..
+  "Secondary spec unlocked at level 40.|r\n\n"..
+  "|cffff0000Left-click to set as primary spec|r\n"
+  .."|cffff0000Right-click to set as secondary spec|r\n"
+  .."|cff999999(Execution order: Bot)|r";
+
+MultiBot.tips.spec.shamanenhpvp =
+  "Enhancement – PvP|cffffffff\n"..
+  "Wolves and burst damage for PvP.\n"..
+  "Secondary spec unlocked at level 40.|r\n\n"..
+  "|cffff0000Left-click to set as primary spec|r\n"
+  .."|cffff0000Right-click to set as secondary spec|r\n"
+  .."|cff999999(Execution order: Bot)|r";
+
+MultiBot.tips.spec.shamanrestopve =
+  "Restoration – PvE|cffffffff\n"..
+  "Chain Heal and raid support in PvE.\n"..
+  "Secondary spec unlocked at level 40.|r\n\n"..
+  "|cffff0000Left-click to set as primary spec|r\n"
+  .."|cffff0000Right-click to set as secondary spec|r\n"
+  .."|cff999999(Execution order: Bot)|r";
+
+MultiBot.tips.spec.shamanrestopvp =
+  "Restoration – PvP|cffffffff\n"..
+  "Earth Shield and survival in PvP.\n"..
+  "Secondary spec unlocked at level 40.|r\n\n"..
+  "|cffff0000Left-click to set as primary spec|r\n"
+  .."|cffff0000Right-click to set as secondary spec|r\n"
+  .."|cff999999(Execution order: Bot)|r";
+
+
+-- Warlock
+MultiBot.tips.spec.warlockafflipve =
+  "Affliction – PvE|cffffffff\n"..
+  "Long-duration DOTs for PvE.\n"..
+  "Secondary spec unlocked at level 40.|r\n\n"..
+  "|cffff0000Left-click to set as primary spec|r\n"
+  .."|cffff0000Right-click to set as secondary spec|r\n"
+  .."|cff999999(Execution order: Bot)|r";
+
+MultiBot.tips.spec.warlockafflipvp =
+  "Affliction – PvP|cffffffff\n"..
+  "Constant pressure DOTs in PvP.\n"..
+  "Secondary spec unlocked at level 40.|r\n\n"..
+  "|cffff0000Left-click to set as primary spec|r\n"
+  .."|cffff0000Right-click to set as secondary spec|r\n"
+  .."|cff999999(Execution order: Bot)|r";
+
+MultiBot.tips.spec.warlockdemonopve =
+  "Demonology – PvE|cffffffff\n"..
+  "Metamorphosis and pets for PvE.\n"..
+  "Secondary spec unlocked at level 40.|r\n\n"..
+  "|cffff0000Left-click to set as primary spec|r\n"
+  .."|cffff0000Right-click to set as secondary spec|r\n"
+  .."|cff999999(Execution order: Bot)|r";
+
+MultiBot.tips.spec.warlockdemonopvp =
+  "Demonology – PvP|cffffffff\n"..
+  "Felguard and burst for PvP.\n"..
+  "Secondary spec unlocked at level 40.|r\n\n"..
+  "|cffff0000Left-click to set as primary spec|r\n"
+  .."|cffff0000Right-click to set as secondary spec|r\n"
+  .."|cff999999(Execution order: Bot)|r";
+
+MultiBot.tips.spec.warlockdestrupve =
+  "Destruction – PvE|cffffffff\n"..
+  "Chaos Bolt and heavy burst in PvE.\n"..
+  "Secondary spec unlocked at level 40.|r\n\n"..
+  "|cffff0000Left-click to set as primary spec|r\n"
+  .."|cffff0000Right-click to set as secondary spec|r\n"
+  .."|cff999999(Execution order: Bot)|r";
+
+MultiBot.tips.spec.warlockdestrupvp =
+  "Destruction – PvP|cffffffff\n"..
+  "Burst and fear control for PvP.\n"..
+  "Secondary spec unlocked at level 40.|r\n\n"..
+  "|cffff0000Left-click to set as primary spec|r\n"
+  .."|cffff0000Right-click to set as secondary spec|r\n"
+  .."|cff999999(Execution order: Bot)|r";
+
+
+-- Warrior
+MultiBot.tips.spec.warriorarmspve =
+  "Arms – PvE|cffffffff\n"..
+  "Execute and burst for PvE.\n"..
+  "Secondary spec unlocked at level 40.|r\n\n"..
+  "|cffff0000Left-click to set as primary spec|r\n"
+  .."|cffff0000Right-click to set as secondary spec|r\n"
+  .."|cff999999(Execution order: Bot)|r";
+
+MultiBot.tips.spec.warriorarmspvp =
+  "Arms – PvP|cffffffff\n"..
+  "Mortal Strike and control for PvP.\n"..
+  "Secondary spec unlocked at level 40.|r\n\n"..
+  "|cffff0000Left-click to set as primary spec|r\n"
+  .."|cffff0000Right-click to set as secondary spec|r\n"
+  .."|cff999999(Execution order: Bot)|r";
+
+MultiBot.tips.spec.warriorfurypve =
+  "Fury – PvE|cffffffff\n"..
+  "Whirlwind and rage for sustained DPS.\n"..
+  "Secondary spec unlocked at level 40.|r\n\n"..
+  "|cffff0000Left-click to set as primary spec|r\n"
+  .."|cffff0000Right-click to set as secondary spec|r\n"
+  .."|cff999999(Execution order: Bot)|r";
+
+MultiBot.tips.spec.warriorfurypvp =
+  "Fury – PvP|cffffffff\n"..
+  "Sustain and self-healing in PvP.\n"..
+  "Secondary spec unlocked at level 40.|r\n\n"..
+  "|cffff0000Left-click to set as primary spec|r\n"
+  .."|cffff0000Right-click to set as secondary spec|r\n"
+  .."|cff999999(Execution order: Bot)|r";
+
+MultiBot.tips.spec.warriorprotecpve =
+  "Protection – PvE|cffffffff\n"..
+  "Tanking and toughness for PvE.\n"..
+  "Secondary spec unlocked at level 40.|r\n\n"..
+  "|cffff0000Left-click to set as primary spec|r\n"
+  .."|cffff0000Right-click to set as secondary spec|r\n"
+  .."|cff999999(Execution order: Bot)|r";
+
+MultiBot.tips.spec.warriorprotecpvp =
+  "Protection – PvP|cffffffff\n"..
+  "Control and resilience in PvP.\n"..
+  "Secondary spec unlocked at level 40.|r\n\n"..
+  "|cffff0000Left-click to set as primary spec|r\n"
+  .."|cffff0000Right-click to set as secondary spec|r\n"
+  .."|cff999999(Execution order: Bot)|r";
+
 -- RTSC --
 
 MultiBot.tips.rtsc = {}
-MultiBot.tips.rtsc.master = 
+MultiBot.tips.rtsc.master =
 "RTSC-Control\n|cffffffff"..
 "With this Control you can define Locations and send Bots there.\n"..
 "The Execution-Order shows the Receiver for Commandos.|r\n\n"..
@@ -2632,7 +3612,7 @@ MultiBot.tips.rtsc.master =
 "|cffff0000Right-Click to enable RTSC-Strategy|r\n"..
 "|cff999999(Execution-Order: System)|r";
 
-MultiBot.tips.rtsc.macro = 
+MultiBot.tips.rtsc.macro =
 "Location-Storage\n|cffffffff"..
 "This Button allows you to save a Location.\n"..
 "Left-Click and then use the AEDM-Spell to mark a Location.|r\n\n"..
@@ -2648,7 +3628,7 @@ MultiBot.tips.rtsc.spot =
 "|cffff0000Right-Click to remove the Location|r\n"..
 "|cff999999(Execution-Order: System)|r";
 
-MultiBot.tips.rtsc.group1 = 
+MultiBot.tips.rtsc.group1 =
 "Group-Selector\n|cffffffff"..
 "This Button selects the 1st Group and sends it to a Location.\n"..
 "Left-Click and then use the AEDM-Spell to mark a Location.|r\n\n"..
@@ -2657,7 +3637,7 @@ MultiBot.tips.rtsc.group1 =
 "|cffff0000Right-Click to select the 1st Group|r\n"..
 "|cff999999(Execution-Order: Raid, Party)|r";
 
-MultiBot.tips.rtsc.group2 = 
+MultiBot.tips.rtsc.group2 =
 "Group-Selector\n|cffffffff"..
 "This Button selects the 2nd Group and sends it to a Location.\n"..
 "Left-Click and then use the AEDM-Spell to mark a Location.|r\n\n"..
@@ -2666,7 +3646,7 @@ MultiBot.tips.rtsc.group2 =
 "|cffff0000Right-Click to select the 2nd Group|r\n"..
 "|cff999999(Execution-Order: Raid, Party)|r";
 
-MultiBot.tips.rtsc.group3 = 
+MultiBot.tips.rtsc.group3 =
 "Group-Selector\n|cffffffff"..
 "This Button selects the 3rd Group and sends it to a Location.\n"..
 "Left-Click and then use the AEDM-Spell to mark a Location.|r\n\n"..
@@ -2675,7 +3655,7 @@ MultiBot.tips.rtsc.group3 =
 "|cffff0000Right-Click to select the 3rd Group|r\n"..
 "|cff999999(Execution-Order: Raid, Party)|r";
 
-MultiBot.tips.rtsc.group4 = 
+MultiBot.tips.rtsc.group4 =
 "Group-Selector\n|cffffffff"..
 "This Button selects the 4th Group and sends it to a Location.\n"..
 "Left-Click and then use the AEDM-Spell to mark a Location.|r\n\n"..
@@ -2684,7 +3664,7 @@ MultiBot.tips.rtsc.group4 =
 "|cffff0000Right-Click to select the 4th Group|r\n"..
 "|cff999999(Execution-Order: Raid, Party)|r";
 
-MultiBot.tips.rtsc.group5 = 
+MultiBot.tips.rtsc.group5 =
 "Group-Selector\n|cffffffff"..
 "This Button selects the 5th Group and sends it to a Location.\n"..
 "Left-Click and then use the AEDM-Spell to mark a Location.|r\n\n"..
@@ -2693,7 +3673,7 @@ MultiBot.tips.rtsc.group5 =
 "|cffff0000Right-Click to select the 5th Group|r\n"..
 "|cff999999(Execution-Order: Raid, Party)|r";
 
-MultiBot.tips.rtsc.tank = 
+MultiBot.tips.rtsc.tank =
 "Tank-Selector\n|cffffffff"..
 "This Button selects the Tank-Bots and sends them to a Location.\n"..
 "Left-Click and then use the AEDM-Spell to mark a Location.|r\n\n"..
@@ -2702,7 +3682,7 @@ MultiBot.tips.rtsc.tank =
 "|cffff0000Right-Click to select the Tank-Bots|r\n"..
 "|cff999999(Execution-Order: Raid, Party)|r";
 
-MultiBot.tips.rtsc.dps = 
+MultiBot.tips.rtsc.dps =
 "DPS-Selector\n|cffffffff"..
 "This Button selects the DPS-Bots and sends them to a Location.\n"..
 "Left-Click and then use the AEDM-Spell to mark a Location.|r\n\n"..
@@ -2711,7 +3691,7 @@ MultiBot.tips.rtsc.dps =
 "|cffff0000Right-Click to select the DPS-Bots|r\n"..
 "|cff999999(Execution-Order: Raid, Party)|r";
 
-MultiBot.tips.rtsc.healer = 
+MultiBot.tips.rtsc.healer =
 "Healer-Selector\n|cffffffff"..
 "This Button selects the Healer-Bots and sends them to a Location.\n"..
 "Left-Click and then use the AEDM-Spell to mark a Location.|r\n\n"..
@@ -2720,7 +3700,7 @@ MultiBot.tips.rtsc.healer =
 "|cffff0000Right-Click to select the Healer-Bots|r\n"..
 "|cff999999(Execution-Order: Raid, Party)|r";
 
-MultiBot.tips.rtsc.melee = 
+MultiBot.tips.rtsc.melee =
 "Melee-Selector\n|cffffffff"..
 "This Button selects the Melee-Fighters and sends them to a Location.\n"..
 "Left-Click and then use the AEDM-Spell to mark a Location.|r\n\n"..
@@ -2729,7 +3709,7 @@ MultiBot.tips.rtsc.melee =
 "|cffff0000Right-Click to select the Melee-Fighters|r\n"..
 "|cff999999(Execution-Order: Raid, Party)|r";
 
-MultiBot.tips.rtsc.ranged = 
+MultiBot.tips.rtsc.ranged =
 "Ranged-Selector\n|cffffffff"..
 "This Button selects the Ranged-Fighters and sends them to a Location.\n"..
 "Left-Click and then use the AEDM-Spell to mark a Location.|r\n\n"..
@@ -2738,7 +3718,7 @@ MultiBot.tips.rtsc.ranged =
 "|cffff0000Right-Click to select the Ranged-Fighters|r\n"..
 "|cff999999(Execution-Order: Raid, Party)|r";
 
-MultiBot.tips.rtsc.all = 
+MultiBot.tips.rtsc.all =
 "All-Selector\n|cffffffff"..
 "This Button selects the all Bots and sends them to a Location.\n"..
 "Left-Click and then use the AEDM-Spell to mark a Location.|r\n\n"..
@@ -2747,7 +3727,7 @@ MultiBot.tips.rtsc.all =
 "|cffff0000Right-Click to select all Bots|r\n"..
 "|cff999999(Execution-Order: Raid, Party)|r";
 
-MultiBot.tips.rtsc.browse = 
+MultiBot.tips.rtsc.browse =
 "Browse-Selector\n|cffffffff"..
 "This Button switches throu the differend Selectorbars.|r\n\n"..
 "|cffff0000Left-Click to switch the Selectorbar|r\n"..
